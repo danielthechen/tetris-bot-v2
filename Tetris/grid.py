@@ -15,6 +15,8 @@ class Grid:
 
                 board_x, board_y = x + j, y + i
 
+                #IMPLEMENT SRS DETECTION HERE:
+
                 #Wall Collision
                 if board_x < 0 or board_x >= BOARD_COLUMNS:
                     return False
@@ -23,7 +25,7 @@ class Grid:
                 if board_y >= BOARD_ROWS:
                     return False
                 
-                if self.matrix[board_y][board_x] != EMPTY_BLOCK
+                if self.matrix[board_y][board_x] != EMPTY_BLOCK:
                     return False
 
         return True
