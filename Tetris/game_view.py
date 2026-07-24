@@ -7,11 +7,13 @@ from tetronimoes import colors, shapes
 BOARD_WIDTH = BOARD_COLUMNS * CELL_SIZE
 BOARD_HEIGHT = BOARD_ROWS * CELL_SIZE
 
-SIDEBAR_WIDTH = QUEUE_BLOCK_WIDTH * CELL_SIZE
-SIDEBAR_CONTENT_X = BOARD_WIDTH + QUEUE_BORDER + CELL_SIZE
-SIDEBAR_CONTENT_Y = CELL_SIZE
+QUEUE_WIDTH = QUEUE_BLOCK_WIDTH * CELL_SIZE
+QUEUE_CONTENT_X = BOARD_WIDTH + QUEUE_BORDER + CELL_SIZE
+QUEUE_CONTENT_Y = CELL_SIZE
 
-GAME_WIDTH = BOARD_WIDTH + QUEUE_BORDER + SIDEBAR_WIDTH
+
+
+GAME_WIDTH = BOARD_WIDTH + QUEUE_BORDER + QUEUE_WIDTH
 GAME_HEIGHT = BOARD_HEIGHT
 
 class GameView:
@@ -30,23 +32,25 @@ class GameView:
                         colors[shape_id], x + j * CELL_SIZE, y + i * CELL_SIZE
                         )
 
-    def draw_sidebar(self,next_shape_id, score):
+    def draw_sidebar(self,next_shape_ids, score):
         self.screen.fill(
             color_empty, (BOARD_WIDTH, 0, QUEUE_BORDER, GAME_HEIGHT)
         )
 
-        self.draw_shape(
-            shapes[next_shape_id],
-            next_shape_id,
-            SIDEBAR_CONTENT_X,
-            SIDEBAR_CONTENT_Y
-        )
+        for shape_Num in range(len(next_shape_ids)):
+            self.draw_shape(
+                shapes[next_shape_ids[shape_Num]],
+                next_shape_ids[shape_Num],
+                QUEUE_CONTENT_X,
+                QUEUE_CONTENT_Y + shape_Num * CELL_SIZE * 3
+            )
 
-        score_surface = self.font.render("Score:", True, color_Font)
-        self.screen.blit(score_surface, (SIDEBAR_CONTENT_X, CELL_SIZE * 5))
 
-        score_surface = self.font.render(f"{score:06}", True, color_Font)
-        self.screen.blit(score_surface, (SIDEBAR_CONTENT_X, CELL_SIZE * 6))
+        # score_surface = self.font.render("Score:", True, color_Font)
+        # self.screen.blit(score_surface, (QUEUE_CONTENT_X, CELL_SIZE * 5))
+
+        # score_surface = self.font.render(f"{score:06}", True, color_Font)
+        # self.screen.blit(score_surface, (QUEUE_CONTENT_X, CELL_SIZE * 6))
 
     def draw_game_over_screen(self):
         overlay = pygame.Surface((BOARD_WIDTH, BOARD_HEIGHT))
@@ -78,7 +82,7 @@ class GameView:
             state.piece.y * CELL_SIZE,
         )
 
-        self.draw_sidebar(next_shape_id=state.next_shape_id, score=state.score)
+        self.draw_sidebar(next_shape_ids=state.next_shape_ids, score=state.score)
 
         if state.game_over:
             self.draw_game_over_screen()

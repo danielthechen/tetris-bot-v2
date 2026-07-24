@@ -31,8 +31,7 @@ class Game:
             grid= Grid(),
             piece= Piece(self.get_random_shape_id()),
             gravity= Gravity(),
-            #THIS NEEDS TO ALSO ACCOUNT FOR 7 BAG, PERHAPS MAKE EACH INSTANCE OF 7 BAG REMOVE A PIECE
-            next_shape_id= self.get_random_shape_id(),
+            next_shape_ids= [self.get_random_shape_id() for _ in range (5)]
         )
 
     def move_piece(self, move_x, move_y):
@@ -65,11 +64,11 @@ class Game:
         cleared_lines = state.grid.clear_lines()
         state.score += cleared_lines
 
-        new_piece = Piece(state.next_shape_id)
+        new_piece = Piece(state.next_shape_ids.pop(0))
 
         if state.grid.can_fit_shape(new_piece.shape, new_piece.x, new_piece.y):
             state.piece = new_piece
-            state.next_shape_id = self.get_random_shape_id()
+            state.next_shape_ids.append(self.get_random_shape_id())
         else:
             state.game_over = True
 
@@ -86,9 +85,14 @@ class Game:
         while self.soft_drop():
             pass
 
+    #TODO
+    def hold(self):
+        pass
+
     def update(self, inputs, dt):
         if self.state.game_over:
             if pygame.K_r in inputs:
+                self.bag = []
                 self.state = self.get_initial_state()
             return
 
@@ -106,6 +110,9 @@ class Game:
 
         if pygame.K_RSHIFT in inputs:
             self.rotate_piece(2)
+
+        if pygame.K_SPACE in inputs:
+            self.hold()
 
         if pygame.K_x in inputs:
             self.hard_drop()
