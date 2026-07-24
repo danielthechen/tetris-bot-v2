@@ -31,7 +31,9 @@ class Game:
             grid= Grid(),
             piece= Piece(self.get_random_shape_id()),
             gravity= Gravity(),
-            next_shape_ids= [self.get_random_shape_id() for _ in range (5)]
+            next_shape_ids= [self.get_random_shape_id() for _ in range (5)],
+            hold_piece = '',
+            turn_held = False
         )
 
     def move_piece(self, move_x, move_y):
@@ -69,6 +71,7 @@ class Game:
         if state.grid.can_fit_shape(new_piece.shape, new_piece.x, new_piece.y):
             state.piece = new_piece
             state.next_shape_ids.append(self.get_random_shape_id())
+            self.state.turn_held = False
         else:
             state.game_over = True
 
@@ -85,15 +88,25 @@ class Game:
         while self.soft_drop():
             pass
 
-    #TODO
     def hold(self):
-        pass
+        state = self.state
+
+        if state.hold_piece:
+            held_piece = Piece(state.hold_piece)
+        else:
+            held_piece = Piece(state.next_shape_ids.pop(0))
+            state.next_shape_ids.append(self.get_random_shape_id())
+
+        if state.grid.can_fit_shape(held_piece.shape, held_piece.x, held_piece.y):
+            state.piece, state.hold_piece = held_piece, state.piece.name
+            self.state.turn_held = True
+        else:
+            state.game_over = True
 
     def update(self, inputs, dt):
-        if self.state.game_over:
-            if pygame.K_r in inputs:
-                self.bag = []
-                self.state = self.get_initial_state()
+        if pygame.K_BACKQUOTE in inputs:
+            self.bag = []
+            self.state = self.get_initial_state()
             return
 
         if pygame.K_LEFT in inputs:
@@ -111,7 +124,7 @@ class Game:
         if pygame.K_RSHIFT in inputs:
             self.rotate_piece(2)
 
-        if pygame.K_SPACE in inputs:
+        if (pygame.K_SPACE in inputs) and not self.state.turn_held:
             self.hold()
 
         if pygame.K_x in inputs:

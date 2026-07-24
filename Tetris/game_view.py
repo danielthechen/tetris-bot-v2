@@ -58,10 +58,10 @@ class GameView:
         overlay = pygame.Surface((BOARD_WIDTH, BOARD_HEIGHT))
         overlay.set_alpha(alpha_overlay)
         overlay.fill(color_game_over)
-        self.screen.blit(overlay,(0,0))
+        self.screen.blit(overlay,(HOLD_WIDTH,0))
         text_surface = self.font.render("Game over", True, color_Font)
         text_center = text_surface.get_rect().centerx
-        self.screen.blit(text_surface, (BOARD_WIDTH / 2 - text_center, CELL_SIZE * 5))
+        self.screen.blit(text_surface, (HOLD_WIDTH + BOARD_WIDTH / 2 - text_center, CELL_SIZE * 5))
 
     def draw_grid(self,grid):
         for i,row in enumerate(grid.matrix):
@@ -72,10 +72,21 @@ class GameView:
                 )
                 self.draw_block(color, j * CELL_SIZE + HOLD_WIDTH, i * CELL_SIZE)
 
+    def draw_hold(self,hold_piece):
+        if hold_piece:
+            self.draw_shape(
+            shapes[hold_piece],
+            hold_piece,
+            HOLD_CONTENT_X,
+            HOLD_CONTENT_Y
+            )
+
     def render(self, state: Gamestate):
         self.screen.fill(color_background)
 
         self.draw_grid(state.grid)
+
+        self.draw_hold(state.hold_piece)
 
         self.draw_shape(
             state.piece.shape,
