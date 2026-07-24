@@ -1,19 +1,21 @@
 import pygame
 from grid import EMPTY_BLOCK
-from config import BOARD_COLUMNS, BOARD_ROWS, CELL_SIZE, QUEUE_BLOCK_WIDTH, QUEUE_BORDER, color_background, color_empty, color_Font, alpha_overlay, color_game_over
+from config import BOARD_COLUMNS, BOARD_ROWS, CELL_SIZE, HOLD_BLOCK_WIDTH, QUEUE_BLOCK_WIDTH, QUEUE_BORDER, color_background, color_empty, color_Font, alpha_overlay, color_game_over
 from game_state import Gamestate
 from tetronimoes import colors, shapes
+
+HOLD_WIDTH = HOLD_BLOCK_WIDTH * CELL_SIZE
+HOLD_CONTENT_X = CELL_SIZE
+HOLD_CONTENT_Y = CELL_SIZE
 
 BOARD_WIDTH = BOARD_COLUMNS * CELL_SIZE
 BOARD_HEIGHT = BOARD_ROWS * CELL_SIZE
 
 QUEUE_WIDTH = QUEUE_BLOCK_WIDTH * CELL_SIZE
-QUEUE_CONTENT_X = BOARD_WIDTH + QUEUE_BORDER + CELL_SIZE
+QUEUE_CONTENT_X = HOLD_WIDTH + BOARD_WIDTH + QUEUE_BORDER + CELL_SIZE
 QUEUE_CONTENT_Y = CELL_SIZE
 
-
-
-GAME_WIDTH = BOARD_WIDTH + QUEUE_BORDER + QUEUE_WIDTH
+GAME_WIDTH = HOLD_WIDTH + BOARD_WIDTH + QUEUE_BORDER + QUEUE_WIDTH
 GAME_HEIGHT = BOARD_HEIGHT
 
 class GameView:
@@ -68,7 +70,7 @@ class GameView:
                     color_empty if shape_id == EMPTY_BLOCK
                     else colors[shape_id]
                 )
-                self.draw_block(color, j * CELL_SIZE, i * CELL_SIZE)
+                self.draw_block(color, j * CELL_SIZE + HOLD_WIDTH, i * CELL_SIZE)
 
     def render(self, state: Gamestate):
         self.screen.fill(color_background)
@@ -78,7 +80,7 @@ class GameView:
         self.draw_shape(
             state.piece.shape,
             state.piece.name,
-            state.piece.x * CELL_SIZE,
+            state.piece.x * CELL_SIZE + HOLD_WIDTH,
             state.piece.y * CELL_SIZE,
         )
 
