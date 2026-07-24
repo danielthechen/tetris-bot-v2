@@ -6,7 +6,9 @@ color_Font = pygame.Color("#FFFFFF")
 color_game_over = pygame.Color("#2E2E2E")
 alpha_overlay = 200
 
+TRUE_ROWS = 40
 BOARD_ROWS = 20
+OFFSET = TRUE_ROWS - BOARD_ROWS
 BOARD_COLUMNS = 10
 
 GRAV = 0.5
@@ -17,4 +19,3 @@ CELL_SIZE = 40
 QUEUE_BORDER = 0
 QUEUE_BLOCK_WIDTH = 6
 HOLD_BLOCK_WIDTH = 6
-

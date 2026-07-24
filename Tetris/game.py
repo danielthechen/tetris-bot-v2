@@ -104,9 +104,10 @@ class Game:
             state.game_over = True
 
     def update(self, inputs, dt):
-        if pygame.K_BACKQUOTE in inputs:
-            self.bag = []
-            self.state = self.get_initial_state()
+        if self.state.game_over:
+            if pygame.K_BACKQUOTE in inputs:
+                self.bag = []
+                self.state = self.get_initial_state()
             return
 
         if pygame.K_LEFT in inputs:

@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from config import OFFSET
 from tetronimoes import shapes
 
 class Piece:
@@ -7,7 +8,8 @@ class Piece:
         self.name = name
         self.shape = shapes[name]
         self.x = 3
-        self.y = 0
+        #Jstris: -1, Tetrio: -2, Normal: 0
+        self.y = -1 + OFFSET
 
     def move(self, move_x, move_y):
         self.x += move_x

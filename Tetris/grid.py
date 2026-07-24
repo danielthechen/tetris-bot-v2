@@ -1,11 +1,11 @@
-from config import BOARD_COLUMNS, BOARD_ROWS
+from config import BOARD_COLUMNS, TRUE_ROWS
 from piece import Piece
 
 EMPTY_BLOCK = -1
 
 class Grid:
     def  __init__(self):
-        self.matrix = [[EMPTY_BLOCK] * BOARD_COLUMNS for _ in range(BOARD_ROWS)]
+        self.matrix = [[EMPTY_BLOCK] * BOARD_COLUMNS for _ in range(TRUE_ROWS)]
 
     def can_fit_shape(self, shape, x, y):
         for i, row in enumerate(shape):
@@ -22,7 +22,7 @@ class Grid:
                     return False
 
                 #Floor Collision
-                if board_y >= BOARD_ROWS:
+                if board_y >= TRUE_ROWS:
                     return False
                 
                 if self.matrix[board_y][board_x] != EMPTY_BLOCK:

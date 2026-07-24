@@ -1,6 +1,6 @@
 import pygame
 from grid import EMPTY_BLOCK
-from config import BOARD_COLUMNS, BOARD_ROWS, CELL_SIZE, HOLD_BLOCK_WIDTH, QUEUE_BLOCK_WIDTH, QUEUE_BORDER, color_background, color_empty, color_Font, alpha_overlay, color_game_over
+from config import BOARD_COLUMNS, BOARD_ROWS, CELL_SIZE, HOLD_BLOCK_WIDTH, QUEUE_BLOCK_WIDTH, QUEUE_BORDER, OFFSET, color_background, color_empty, color_Font, alpha_overlay, color_game_over
 from game_state import Gamestate
 from tetronimoes import colors, shapes
 
@@ -64,7 +64,8 @@ class GameView:
         self.screen.blit(text_surface, (HOLD_WIDTH + BOARD_WIDTH / 2 - text_center, CELL_SIZE * 5))
 
     def draw_grid(self,grid):
-        for i,row in enumerate(grid.matrix):
+        for i in range(BOARD_ROWS):
+            row = grid.matrix[OFFSET + i]
             for j,shape_id in enumerate(row):
                 color = (
                     color_empty if shape_id == EMPTY_BLOCK
@@ -92,7 +93,7 @@ class GameView:
             state.piece.shape,
             state.piece.name,
             state.piece.x * CELL_SIZE + HOLD_WIDTH,
-            state.piece.y * CELL_SIZE,
+            (state.piece.y - OFFSET) * CELL_SIZE,
         )
 
         self.draw_sidebar(next_shape_ids=state.next_shape_ids, score=state.score)
