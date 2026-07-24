@@ -9,12 +9,22 @@ from gravity import Gravity
 
 class Game:
     def __init__(self):
+        self.bag = []
         self.state = self.get_initial_state()
         self.view = GameView()
 
-    #CHANGE THIS TO MAKE THIS A 7-BAG SYSTEM
+    def refill(self):
+            self.bag = ['I','J','L','Z','S','O','T']
+            random.shuffle(self.bag)
+    
     def get_random_shape_id(self):
-        return random.choice(('I','J','L','Z','S','O','T'))
+        if not self.bag:
+            self.refill()
+        return self.bag.pop()
+
+    #Complete randomness
+    # def get_random_shape_id(self):
+    #     return random.choice(('I','J','L','Z','S','O','T'))
 
     def get_initial_state(self):
         return Gamestate(
@@ -25,6 +35,88 @@ class Game:
             next_shape_id= self.get_random_shape_id(),
         )
 
+    def move_piece(self, move_x, move_y):
+        piece = self.state.piece
+
+        can_move = self.state.grid.can_fit_shape(
+            piece.shape, piece.x + move_x, piece.y + move_y
+        )
+
+        if can_move:
+            piece.move(move_x, move_y)
+
+        return can_move
+
+    def rotate_piece(self, idx):
+        piece = self.state.piece
+
+        new_shape = piece.rotate(idx)
+        can_rotate = self.state.grid.can_fit_shape(new_shape, piece.x, piece.y)
+
+        if can_rotate:
+            piece.shape = new_shape
+
+        return can_rotate
+
+    def handle_piece_landing(self):
+        state = self.state
+        state.grid.place_piece(state.piece)
+
+        cleared_lines = state.grid.clear_lines()
+        state.score += cleared_lines
+
+        new_piece = Piece(state.next_shape_id)
+
+        if state.grid.can_fit_shape(new_piece.shape, new_piece.x, new_piece.y):
+            state.piece = new_piece
+            state.next_shape_id = self.get_random_shape_id()
+        else:
+            state.game_over = True
+
+    def soft_drop(self):
+        self.state.gravity.reset_progress()
+
+        did_move = self.move_piece(0, 1)
+        if not did_move:
+            self.handle_piece_landing()
+
+        return did_move
+
+    def hard_drop(self):
+        while self.soft_drop():
+            pass
+
+    def update(self, inputs, dt):
+        if self.state.game_over:
+            if pygame.K_r in inputs:
+                self.state = self.get_initial_state()
+            return
+
+        if pygame.K_LEFT in inputs:
+            self.move_piece(-1, 0)
+
+        if pygame.K_RIGHT in inputs:
+            self.move_piece(1,0)
+
+        if pygame.K_UP in inputs:
+            self.rotate_piece(1)
+
+        if pygame.K_DOWN in inputs:
+            self.rotate_piece(-1)
+
+        if pygame.K_RSHIFT in inputs:
+            self.rotate_piece(2)
+
+        if pygame.K_x in inputs:
+            self.hard_drop()
+
+        if pygame.K_z in inputs:
+            self.soft_drop()
+
+        should_drop = self.state.gravity.update_progress(dt)
+        if should_drop:
+            self.soft_drop()
+
     def start(self):
         pygame.init()
         pygame.display.set_caption("Tetris")
@@ -32,8 +124,6 @@ class Game:
         clock = pygame.time.Clock()
 
         self.view.init_display()
-
-        self.state.is_game_over = True
 
         inputs = set()
 
@@ -49,8 +139,7 @@ class Game:
                 elif event.type == pygame.KEYDOWN:
                     inputs.add(event.key)
 
+            self.update(inputs, dt)
             self.view.render(self.state)
-
-            print(inputs)
 
         pygame.quit()

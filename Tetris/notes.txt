@@ -3,8 +3,9 @@ MODERN TETRIS CHANGES:
 - 5 piece Queue 
 - SRS Spin system
 - Modern Scoring (maybe just make my own to prioritize certain play-styles)
-- Grid Max Height increases: GAME OVER only when piece spawns in with collision
-- 180 Spins
+- Grid Max Height is actually above 20 rows : GAME OVER only when piece spawns in with collision
+- 180 Spins (Done)
+- Hold piece
 
 Training:
 - 

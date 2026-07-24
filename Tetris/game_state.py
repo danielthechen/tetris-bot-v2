@@ -10,5 +10,3 @@ class Gamestate:
         self.piece = piece
         self.gravity = gravity
         self.next_shape_id = next_shape_id
-
-        

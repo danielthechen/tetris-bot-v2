@@ -43,7 +43,7 @@ class Grid:
             if all(block != EMPTY_BLOCK for block in self.matrix[i]):
                 cleared_lines += 1
             elif cleared_lines > 0:
-                self.matrix[i + cleared_lines] = self.matrix[i:]
+                self.matrix[i + cleared_lines] = self.matrix[i][:]
 
         for i in range (cleared_lines):
             self.matrix[i] = [EMPTY_BLOCK] * BOARD_COLUMNS

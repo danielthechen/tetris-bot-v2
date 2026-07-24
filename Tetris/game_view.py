@@ -1,5 +1,6 @@
 import pygame
-from config import BOARD_COLUMNS, BOARD_ROWS, CELL_SIZE, QUEUE_BLOCK_WIDTH, QUEUE_BORDER, color_background, color_empty, color_Font
+from grid import EMPTY_BLOCK
+from config import BOARD_COLUMNS, BOARD_ROWS, CELL_SIZE, QUEUE_BLOCK_WIDTH, QUEUE_BORDER, color_background, color_empty, color_Font, alpha_overlay, color_game_over
 from game_state import Gamestate
 from tetronimoes import colors, shapes
 
@@ -19,7 +20,7 @@ class GameView:
         self.font = pygame.font.SysFont("Monaco", 32, bold=True)
 
     def draw_block(self, color, x, y):
-        self.screen.fill(color, (x, y, CELL_SIZE - 1, CELL_SIZE-1))
+        self.screen.fill(color, (x, y, CELL_SIZE - 1, CELL_SIZE - 1))
 
     def draw_shape(self, shape, shape_id, x, y):
         for i, row in enumerate(shape):
@@ -48,11 +49,27 @@ class GameView:
         self.screen.blit(score_surface, (SIDEBAR_CONTENT_X, CELL_SIZE * 6))
 
     def draw_game_over_screen(self):
-        overlay = pygame.Surface(BOARD_WIDTH, BOARD_HEIGHT)
-        overlay.set_alpha(ALPHA_GAME_OVER_OVERLAY)
+        overlay = pygame.Surface((BOARD_WIDTH, BOARD_HEIGHT))
+        overlay.set_alpha(alpha_overlay)
+        overlay.fill(color_game_over)
+        self.screen.blit(overlay,(0,0))
+        text_surface = self.font.render("Game over", True, color_Font)
+        text_center = text_surface.get_rect().centerx
+        self.screen.blit(text_surface, (BOARD_WIDTH / 2 - text_center, CELL_SIZE * 5))
+
+    def draw_grid(self,grid):
+        for i,row in enumerate(grid.matrix):
+            for j,shape_id in enumerate(row):
+                color = (
+                    color_empty if shape_id == EMPTY_BLOCK
+                    else colors[shape_id]
+                )
+                self.draw_block(color, j * CELL_SIZE, i * CELL_SIZE)
 
     def render(self, state: Gamestate):
         self.screen.fill(color_background)
+
+        self.draw_grid(state.grid)
 
         self.draw_shape(
             state.piece.shape,
@@ -62,5 +79,8 @@ class GameView:
         )
 
         self.draw_sidebar(next_shape_id=state.next_shape_id, score=state.score)
+
+        if state.game_over:
+            self.draw_game_over_screen()
 
         pygame.display.flip()
