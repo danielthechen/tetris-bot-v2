@@ -1,5 +1,5 @@
 MODERN TETRIS CHANGES:
-- 7 bag
+- 7 bag (Done)
 - 5 piece Queue 
 - SRS Spin system
 - Modern Scoring (maybe just make my own to prioritize certain play-styles)
