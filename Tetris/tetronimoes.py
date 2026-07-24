@@ -12,7 +12,7 @@ colors = {
     'T' : pygame.Color(161, 53, 134),  # purple - T
 }
 
-shape = {
+shapes = {
 
     #I Piece
     'I' : np.array([

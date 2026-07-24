@@ -1,0 +1,10 @@
+MODERN TETRIS CHANGES:
+- 7 bag
+- 5 piece Queue 
+- SRS Spin system
+- Modern Scoring (maybe just make my own to prioritize certain play-styles)
+- Grid Max Height increases: GAME OVER only when piece spawns in with collision
+- 180 Spins
+
+Training:
+- 

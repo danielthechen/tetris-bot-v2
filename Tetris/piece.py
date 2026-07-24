@@ -1,11 +1,13 @@
 import random
 import numpy as np
-from tetronimoes import shape
+from tetronimoes import shapes
 
 class Piece:
     def __init__(self, name):
         self.name = name
-        self.shape = shape[name]
+        self.shape = shapes[name]
+        self.x = 3
+        self.y = 0
 
     def move(self, move_x, move_y):
         self.x += move_x
