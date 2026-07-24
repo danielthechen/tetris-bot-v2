@@ -6,6 +6,12 @@ color_Font = pygame.Color("#FFFFFF")
 color_game_over = pygame.Color("#2E2E2E")
 alpha_overlay = 200
 
+lock_delay = 500 #milliseconds
+max_lock_reset = 15
+
+DAS = 92
+ARR = 8
+
 TRUE_ROWS = 40
 BOARD_ROWS = 20
 OFFSET = TRUE_ROWS - BOARD_ROWS

@@ -3,6 +3,7 @@ import pygame
 from tetronimoes import shapes
 from game_view import GameView
 from game_state import Gamestate
+from config import lock_delay, max_lock_reset, DAS, ARR
 from piece import Piece
 from grid import Grid
 from gravity import Gravity
@@ -33,7 +34,9 @@ class Game:
             gravity= Gravity(),
             next_shape_ids= [self.get_random_shape_id() for _ in range (5)],
             hold_piece = '',
-            turn_held = False
+            turn_held = False,
+            lock_timer= 0,
+            lock_resets= 0,
         )
 
     def move_piece(self, move_x, move_y):
@@ -45,6 +48,9 @@ class Game:
 
         if can_move:
             piece.move(move_x, move_y)
+            if not self.state.grid.can_fit_shape(piece.shape, piece.x, piece.y + 1):
+                self.state.lock_timer = 0
+                self.state.lock_resets += 1
 
         return can_move
 
@@ -56,6 +62,9 @@ class Game:
 
         if can_rotate:
             piece.shape = new_shape
+            if not self.state.grid.can_fit_shape(piece.shape, piece.x, piece.y + 1):
+                self.state.lock_timer = 0
+                self.state.lock_resets += 1
 
         return can_rotate
 
@@ -67,7 +76,7 @@ class Game:
         state.score += cleared_lines
 
         new_piece = Piece(state.next_shape_ids.pop(0))
-
+    
         if state.grid.can_fit_shape(new_piece.shape, new_piece.x, new_piece.y):
             state.piece = new_piece
             state.next_shape_ids.append(self.get_random_shape_id())
@@ -75,18 +84,18 @@ class Game:
         else:
             state.game_over = True
 
+        state.lock_timer = 0
+        state.lock_resets = 0
+
     def soft_drop(self):
         self.state.gravity.reset_progress()
-
         did_move = self.move_piece(0, 1)
-        if not did_move:
-            self.handle_piece_landing()
-
         return did_move
 
     def hard_drop(self):
         while self.soft_drop():
             pass
+        self.handle_piece_landing()
 
     def hold(self):
         state = self.state
@@ -104,6 +113,7 @@ class Game:
             state.game_over = True
 
     def update(self, inputs, dt):
+        
         if self.state.game_over:
             if pygame.K_BACKQUOTE in inputs:
                 self.bag = []
@@ -138,10 +148,19 @@ class Game:
         if should_drop:
             self.soft_drop()
 
+        if not self.state.grid.can_fit_shape(
+            self.state.piece.shape,
+            self.state.piece.x,
+            self.state.piece.y + 1
+        ):
+            self.state.lock_timer += dt
+            if self.state.lock_timer >= lock_delay or self.state.lock_resets >= max_lock_reset:
+                self.handle_piece_landing()
+
     def start(self):
         pygame.init()
         pygame.display.set_caption("Tetris")
-        pygame.key.set_repeat(400,10)
+        pygame.key.set_repeat(DAS,ARR)
         clock = pygame.time.Clock()
 
         self.view.init_display()

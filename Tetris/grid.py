@@ -1,7 +1,7 @@
 from config import BOARD_COLUMNS, TRUE_ROWS
 from piece import Piece
 
-EMPTY_BLOCK = -1
+EMPTY_BLOCK = 0
 
 class Grid:
     def  __init__(self):
