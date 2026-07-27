@@ -6,6 +6,7 @@ MODERN TETRIS CHANGES:
 - Grid Max Height is actually above 20 rows : GAME OVER only when piece spawns in with collision (Done)
 - Implement Lock Delay (Done)
 - Implement DAS/ARR/Instant-Soft drop (KINDA WACK, NEED TO FIX FOR ALL KEYS)
+    - also need to ensure multiple keys can be pressed at once
 - SRS Spin system (T spins, J & L spins, I spins, Z & S spins, NO O-SPINS)
 
 Training:
