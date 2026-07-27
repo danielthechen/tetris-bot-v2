@@ -11,7 +11,11 @@ from gravity import Gravity
 class Game:
     def __init__(self):
         self.bag = []
-        self.key_states = {}
+        self.active_dir_key = None
+        self.active_dir = 0
+        self.press_time = 0
+        self.left_press_time = 0
+        self.right_press_time = 0
         self.state = self.get_initial_state()
         self.view = GameView()
 
@@ -113,28 +117,46 @@ class Game:
         else:
             state.game_over = True
 
+    def get_active_direction(self, inputs, time_now):
+        if inputs[pygame.K_LEFT]:
+            if self.left_press_time == 0:
+                self.left_press_time = time_now
+        else:
+            self.left_press_time = 0
+
+        if inputs[pygame.K_RIGHT]:
+            if self.right_press_time == 0:
+                self.right_press_time = time_now
+        else:
+            self.right_press_time = 0
+
+        if self.left_press_time and (self.right_press_time == 0 or self.left_press_time > self.right_press_time):
+            return pygame.K_LEFT, -1
+        elif self.right_press_time and (self.left_press_time == 0 or self.right_press_time > self.left_press_time):
+            return pygame.K_RIGHT, 1
+        else:
+            return None, 0
+
     def update(self, inputs, dt):
         time_now = pygame.time.get_ticks()
-        
+        old_active_key = self.active_dir_key
+
         if self.state.game_over:
             if inputs[pygame.K_BACKQUOTE]:
                 self.bag = []
                 self.state = self.get_initial_state()
             return
 
-        for direction_key, direction in [(pygame.K_LEFT, -1), (pygame.K_RIGHT,1)]:
-            if inputs[direction_key]:
-                if direction_key not in self.key_states:
-                    self.key_states[direction_key] = time_now
-                else:
-                    elapsed = time_now - self.key_states[direction_key]
-                    if elapsed >= DAS:
-                        if (elapsed - DAS) % ARR < dt:
-                            self.move_piece(direction,0)
+        self.active_dir_key, self.active_dir = self.get_active_direction(inputs, time_now)
 
-            else:
-                if direction_key in self.key_states:
-                    del self.key_states[direction_key]
+        if self.active_dir_key and self.active_dir_key != old_active_key:
+            self.move_piece(self.active_dir, 0)
+            self.press_time = time_now
+
+        if self.active_dir_key and inputs[self.active_dir_key]:
+            elapsed = time_now - self.press_time
+            if elapsed >= DAS and ((elapsed - DAS) % ARR < dt):
+                self.move_piece(self.active_dir,0)
 
         if inputs[pygame.K_UP]:
             self.rotate_piece(1)
