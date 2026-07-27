@@ -1,13 +1,12 @@
 import random
 import pygame
-from tetronimoes import shapes
 from game_view import GameView
 from game_state import Gamestate
 from config import lock_delay, max_lock_reset, DAS, ARR
 from piece import Piece
 from grid import Grid
 from gravity import Gravity
-from kicks import I_KICKS, JLTSZO_KICKS
+from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, O_OFFSET_DATA
 
 class Game:
     def __init__(self):
@@ -67,16 +66,28 @@ class Game:
         new_shape = piece.rotate(idx)
         new_orientation = (old_orientation - idx) % 4
 
-        kicks = I_KICKS if piece.name == 'I' else JLTSZO_KICKS
-        offsets = kicks.get((old_orientation,new_orientation), [(0,0)])
+        if piece.name == 'I':
+            data = I_OFFSET_DATA
+        elif piece.name == 'O':
+            data = O_OFFSET_DATA
+        else:
+            data = JLTSZ_OFFSET_DATA
+        offsets = [tuple(a - b for a,b in zip(t1, t2)) for t1,t2 in zip(data[old_orientation],data[new_orientation])]
 
         for dx, dy in offsets:
             if self.state.grid.can_fit_shape(new_shape, piece.x + dx, piece.y + dy):
+                print(" ")
+                print(old_orientation, "to,",new_orientation)
+                print("before")
+                print(piece.shape)
                 piece.shape = new_shape
                 piece.x += dx
                 piece.y += dy
+                print("offset",dx, dy)
+                print("after")
+                print(piece.shape)
                 self.state.rotation_idx = new_orientation
-                if not self.state.grid.can_fit_shape(piece.shape, piece.x + dx, piece.y + dy +1):
+                if not self.state.grid.can_fit_shape(piece.shape, piece.x, piece.y + 1):
                     self.state.lock_timer = 0
                     self.state.lock_resets += 1
                 return True

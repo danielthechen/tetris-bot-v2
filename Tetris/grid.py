@@ -15,13 +15,9 @@ class Grid:
 
                 board_x, board_y = x + j, y + i
 
-                #IMPLEMENT SRS DETECTION HERE:
-
-                #Wall Collision
                 if board_x < 0 or board_x >= BOARD_COLUMNS:
                     return False
 
-                #Floor Collision
                 if board_y >= TRUE_ROWS:
                     return False
                 

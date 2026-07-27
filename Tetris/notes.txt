@@ -8,9 +8,8 @@ MODERN TETRIS CHANGES:
 - Implement DAS/ARR (KINDA WACK, NEED TO FIX FOR ALL KEYS) (DONE)
     - also need to ensure multiple keys can be pressed at once (DONE)
 - instant soft drop (not necessary)
-
 BIG BAD BOSS
-- SRS Spin system (T spins, J & L spins, I spins, Z & S spins, NO O-SPINS)
+- SRS Spin system (T spins, J & L spins, I spins, Z & S spins, NO O-SPINS) (DONE)
 
 Training:
 - develop scoring method

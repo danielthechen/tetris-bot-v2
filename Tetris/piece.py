@@ -1,4 +1,3 @@
-import random
 import numpy as np
 from config import OFFSET
 from tetronimoes import shapes
