@@ -7,6 +7,7 @@ from config import lock_delay, max_lock_reset, DAS, ARR
 from piece import Piece
 from grid import Grid
 from gravity import Gravity
+from kicks import I_KICKS, JLTSZO_KICKS
 
 class Game:
     def __init__(self):
@@ -62,17 +63,24 @@ class Game:
 
     def rotate_piece(self, idx):
         piece = self.state.piece
-
+        old_orientation = self.state.rotation_idx
         new_shape = piece.rotate(idx)
-        can_rotate = self.state.grid.can_fit_shape(new_shape, piece.x, piece.y)
+        new_orientation = (old_orientation - idx) % 4
 
-        if can_rotate:
-            piece.shape = new_shape
-            if not self.state.grid.can_fit_shape(piece.shape, piece.x, piece.y + 1):
-                self.state.lock_timer = 0
-                self.state.lock_resets += 1
+        kicks = I_KICKS if piece.name == 'I' else JLTSZO_KICKS
+        offsets = kicks.get((old_orientation,new_orientation), [(0,0)])
 
-        return can_rotate
+        for dx, dy in offsets:
+            if self.state.grid.can_fit_shape(new_shape, piece.x + dx, piece.y + dy):
+                piece.shape = new_shape
+                piece.x += dx
+                piece.y += dy
+                self.state.rotation_idx = new_orientation
+                if not self.state.grid.can_fit_shape(piece.shape, piece.x + dx, piece.y + dy +1):
+                    self.state.lock_timer = 0
+                    self.state.lock_resets += 1
+                return True
+        return False
 
     def handle_piece_landing(self):
         state = self.state
@@ -194,19 +202,13 @@ class Game:
                     if not self.state.game_over:
                         if event.key == pygame.K_UP:
                             self.rotate_piece(1)
-                            self.state.rotation_idx = (self.state.rotation_idx - 1) % 4
-                            print("anticlockwise", self.state.rotation_idx)
         
                         elif event.key == pygame.K_DOWN:
                             self.rotate_piece(-1)
-                            self.state.rotation_idx = (self.state.rotation_idx + 1) % 4
-                            print("clockwise", self.state.rotation_idx)
-                
+
                         elif event.key == pygame.K_RSHIFT:
                             self.rotate_piece(2)
-                            self.state.rotation_idx = (self.state.rotation_idx + 2) % 4
-                            print("180", self.state.rotation_idx)
-                
+
                         elif event.key == pygame.K_SPACE and not self.state.turn_held:
                             self.hold()
                 
