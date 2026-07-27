@@ -42,6 +42,7 @@ class Game:
             turn_held = False,
             lock_timer= 0,
             lock_resets= 0,
+            rotation_idx= 0,
         )
 
     def move_piece(self, move_x, move_y):
@@ -81,11 +82,12 @@ class Game:
         state.score += cleared_lines
 
         new_piece = Piece(state.next_shape_ids.pop(0))
+        state.rotation_idx = 0
     
         if state.grid.can_fit_shape(new_piece.shape, new_piece.x, new_piece.y):
             state.piece = new_piece
             state.next_shape_ids.append(self.get_random_shape_id())
-            self.state.turn_held = False
+            state.turn_held = False
         else:
             state.game_over = True
 
@@ -192,12 +194,18 @@ class Game:
                     if not self.state.game_over:
                         if event.key == pygame.K_UP:
                             self.rotate_piece(1)
+                            self.state.rotation_idx = (self.state.rotation_idx - 1) % 4
+                            print("anticlockwise", self.state.rotation_idx)
         
                         elif event.key == pygame.K_DOWN:
                             self.rotate_piece(-1)
+                            self.state.rotation_idx = (self.state.rotation_idx + 1) % 4
+                            print("clockwise", self.state.rotation_idx)
                 
                         elif event.key == pygame.K_RSHIFT:
                             self.rotate_piece(2)
+                            self.state.rotation_idx = (self.state.rotation_idx + 2) % 4
+                            print("180", self.state.rotation_idx)
                 
                         elif event.key == pygame.K_SPACE and not self.state.turn_held:
                             self.hold()
