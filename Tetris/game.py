@@ -4,7 +4,7 @@ from game_view import GameView
 from game_state import Gamestate
 from config import lock_delay, max_lock_reset, DAS, ARR
 from piece import Piece
-from grid import Grid
+from grid import Grid, EMPTY_BLOCK
 from gravity import Gravity
 from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, O_OFFSET_DATA
 
@@ -43,6 +43,7 @@ class Game:
             lock_timer= 0,
             lock_resets= 0,
             rotation_idx= 0,
+            did_rotate= False,
         )
 
     def move_piece(self, move_x, move_y):
@@ -57,6 +58,7 @@ class Game:
             if not self.state.grid.can_fit_shape(piece.shape, piece.x, piece.y + 1):
                 self.state.lock_timer = 0
                 self.state.lock_resets += 1
+            self.state.did_rotate = False
 
         return can_move
 
@@ -76,16 +78,10 @@ class Game:
 
         for dx, dy in offsets:
             if self.state.grid.can_fit_shape(new_shape, piece.x + dx, piece.y + dy):
-                print(" ")
-                print(old_orientation, "to,",new_orientation)
-                print("before")
-                print(piece.shape)
                 piece.shape = new_shape
                 piece.x += dx
                 piece.y += dy
-                print("offset",dx, dy)
-                print("after")
-                print(piece.shape)
+                self.state.did_rotate = True
                 self.state.rotation_idx = new_orientation
                 if not self.state.grid.can_fit_shape(piece.shape, piece.x, piece.y + 1):
                     self.state.lock_timer = 0
@@ -98,6 +94,23 @@ class Game:
         state.grid.place_piece(state.piece)
 
         cleared_lines = state.grid.clear_lines()
+
+        if self.is_t_spin(state.piece):
+            if cleared_lines == 1:
+                print("T-SPIN SINGLE")
+            elif cleared_lines == 2:
+                print("T-SPIN DOUBLE")
+            elif cleared_lines == 3:
+                print("T-SPIN TRIPLE")
+            else:
+                print("T-SPIN MINI")
+
+        elif cleared_lines == 4:
+            print("TETRIS")
+
+        if self.is_perfect_clear(state.grid.matrix):
+            print("PERFECT CLEAR")
+
         state.score += cleared_lines
 
         new_piece = Piece(state.next_shape_ids.pop(0))
@@ -116,6 +129,8 @@ class Game:
     def soft_drop(self):
         self.state.gravity.reset_progress()
         did_move = self.move_piece(0, 1)
+        if did_move:
+            self.state.did_rotate = False
         return did_move
 
     def hard_drop(self):
@@ -137,6 +152,17 @@ class Game:
             self.state.turn_held = True
         else:
             state.game_over = True
+
+    def is_t_spin(self,piece):
+        if piece.name != "T" or self.state.did_rotate:
+            return False
+        x, y = piece.x, piece.y
+        corners = [(x-1, y-1), (x+1, y-1), (x-1, y+1), (x+1, y+1)]
+        filled = sum(1 for (x,y) in corners if not self.state.grid.can_fit_shape([[1]], x, y))
+        return filled >= 3
+
+    def is_perfect_clear(self,board):
+        return all(cell == EMPTY_BLOCK for row in board for cell in row)
 
     def get_active_direction(self, inputs, time_now):
         if inputs[pygame.K_LEFT]:

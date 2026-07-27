@@ -23,7 +23,6 @@ class Grid:
                 
                 if self.matrix[board_y][board_x] != EMPTY_BLOCK:
                     return False
-
         return True
     
     def place_piece(self, piece: Piece):

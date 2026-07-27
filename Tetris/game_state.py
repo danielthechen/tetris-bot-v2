@@ -3,7 +3,7 @@ from grid import Grid
 from piece import Piece
 
 class Gamestate:
-    def __init__(self, grid: Grid, piece: Piece, gravity: Gravity, next_shape_ids: list, hold_piece: str, turn_held: bool, lock_timer: int, lock_resets: int, rotation_idx = int):
+    def __init__(self, grid: Grid, piece: Piece, gravity: Gravity, next_shape_ids: list, hold_piece: str, turn_held: bool, lock_timer: int, lock_resets: int, rotation_idx = int, did_rotate = bool):
         self.game_over = False
         self.score = 0
         self.grid = grid
@@ -15,3 +15,4 @@ class Gamestate:
         self.lock_timer = lock_timer
         self.lock_resets = lock_resets
         self.rotation_idx = rotation_idx
+        self.did_rotate = did_rotate
