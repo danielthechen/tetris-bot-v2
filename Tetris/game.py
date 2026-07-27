@@ -158,21 +158,6 @@ class Game:
             if elapsed >= DAS and ((elapsed - DAS) % ARR < dt):
                 self.move_piece(self.active_dir,0)
 
-        if inputs[pygame.K_UP]:
-            self.rotate_piece(1)
-
-        if inputs[pygame.K_DOWN]:
-            self.rotate_piece(-1)
-
-        if inputs[pygame.K_RSHIFT]:
-            self.rotate_piece(2)
-
-        if (inputs[pygame.K_SPACE]) and not self.state.turn_held:
-            self.hold()
-
-        if inputs[pygame.K_x]:
-            self.hard_drop()
-
         if inputs[pygame.K_z]:
             self.soft_drop()
 
@@ -192,7 +177,6 @@ class Game:
     def start(self):
         pygame.init()
         pygame.display.set_caption("Tetris")
-        pygame.key.set_repeat(DAS,ARR)
         clock = pygame.time.Clock()
 
         self.view.init_display()
@@ -204,6 +188,26 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     is_running = False
+                elif event.type == pygame.KEYDOWN:
+                    if not self.state.game_over:
+                        if event.key == pygame.K_UP:
+                            self.rotate_piece(1)
+        
+                        elif event.key == pygame.K_DOWN:
+                            self.rotate_piece(-1)
+                
+                        elif event.key == pygame.K_RSHIFT:
+                            self.rotate_piece(2)
+                
+                        elif event.key == pygame.K_SPACE and not self.state.turn_held:
+                            self.hold()
+                
+                        elif event.key == pygame.K_x:
+                            self.hard_drop()
+
+                        elif event.key == pygame.K_BACKQUOTE:
+                            self.bag = []
+                            self.state = self.get_initial_state()
 
             inputs = pygame.key.get_pressed()
 
