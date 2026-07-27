@@ -11,6 +11,7 @@ from gravity import Gravity
 class Game:
     def __init__(self):
         self.bag = []
+        self.key_states = {}
         self.state = self.get_initial_state()
         self.view = GameView()
 
@@ -113,35 +114,44 @@ class Game:
             state.game_over = True
 
     def update(self, inputs, dt):
+        time_now = pygame.time.get_ticks()
         
         if self.state.game_over:
-            if pygame.K_BACKQUOTE in inputs:
+            if inputs[pygame.K_BACKQUOTE]:
                 self.bag = []
                 self.state = self.get_initial_state()
             return
 
-        if pygame.K_LEFT in inputs:
-            self.move_piece(-1, 0)
+        for direction_key, direction in [(pygame.K_LEFT, -1), (pygame.K_RIGHT,1)]:
+            if inputs[direction_key]:
+                if direction_key not in self.key_states:
+                    self.key_states[direction_key] = time_now
+                else:
+                    elapsed = time_now - self.key_states[direction_key]
+                    if elapsed >= DAS:
+                        if (elapsed - DAS) % ARR < dt:
+                            self.move_piece(direction,0)
 
-        if pygame.K_RIGHT in inputs:
-            self.move_piece(1,0)
+            else:
+                if direction_key in self.key_states:
+                    del self.key_states[direction_key]
 
-        if pygame.K_UP in inputs:
+        if inputs[pygame.K_UP]:
             self.rotate_piece(1)
 
-        if pygame.K_DOWN in inputs:
+        if inputs[pygame.K_DOWN]:
             self.rotate_piece(-1)
 
-        if pygame.K_RSHIFT in inputs:
+        if inputs[pygame.K_RSHIFT]:
             self.rotate_piece(2)
 
-        if (pygame.K_SPACE in inputs) and not self.state.turn_held:
+        if (inputs[pygame.K_SPACE]) and not self.state.turn_held:
             self.hold()
 
-        if pygame.K_x in inputs:
+        if inputs[pygame.K_x]:
             self.hard_drop()
 
-        if pygame.K_z in inputs:
+        if inputs[pygame.K_z]:
             self.soft_drop()
 
         should_drop = self.state.gravity.update_progress(dt)
@@ -165,19 +175,15 @@ class Game:
 
         self.view.init_display()
 
-        inputs = set()
-
         is_running = True
         while is_running:
             dt = clock.tick(60)
 
-            inputs.clear()
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     is_running = False
-                elif event.type == pygame.KEYDOWN:
-                    inputs.add(event.key)
+
+            inputs = pygame.key.get_pressed()
 
             self.update(inputs, dt)
             self.view.render(self.state)
