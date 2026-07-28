@@ -2,11 +2,11 @@ import random
 import pygame
 from game_view import GameView
 from game_state import Gamestate
-from config import lock_delay, max_lock_reset, DAS, ARR
+from config import BOARD_COLUMNS, BOARD_ROWS, lock_delay, max_lock_reset, DAS, ARR
 from piece import Piece
 from grid import Grid, EMPTY_BLOCK
 from gravity import Gravity
-from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, O_OFFSET_DATA
+from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, KICKS_180, O_OFFSET_DATA
 
 class Game:
     def __init__(self):
@@ -68,13 +68,17 @@ class Game:
         new_shape = piece.rotate(idx)
         new_orientation = (old_orientation - idx) % 4
 
-        if piece.name == 'I':
-            data = I_OFFSET_DATA
-        elif piece.name == 'O':
-            data = O_OFFSET_DATA
+        if idx != 2:
+            if piece.name == 'I':
+                data = I_OFFSET_DATA
+            elif piece.name == 'O':
+                data = O_OFFSET_DATA
+            else:
+                data = JLTSZ_OFFSET_DATA
+            offsets = [tuple(a - b for a,b in zip(t1, t2)) for t1,t2 in zip(data[old_orientation],data[new_orientation])]
         else:
-            data = JLTSZ_OFFSET_DATA
-        offsets = [tuple(a - b for a,b in zip(t1, t2)) for t1,t2 in zip(data[old_orientation],data[new_orientation])]
+            offsets = KICKS_180[old_orientation]
+
 
         for dx, dy in offsets:
             if self.state.grid.can_fit_shape(new_shape, piece.x + dx, piece.y + dy):
@@ -154,11 +158,16 @@ class Game:
             state.game_over = True
 
     def is_t_spin(self,piece):
-        if piece.name != "T" or self.state.did_rotate:
+        if piece.name != "T" or not self.state.did_rotate:
             return False
         x, y = piece.x, piece.y
         corners = [(x-1, y-1), (x+1, y-1), (x-1, y+1), (x+1, y+1)]
-        filled = sum(1 for (x,y) in corners if not self.state.grid.can_fit_shape([[1]], x, y))
+        filled = 0
+        for cx, cy in corners:
+            if cx < 0 or cx >= BOARD_COLUMNS or cy < 0 or cy >= BOARD_ROWS:
+                filled += 1
+            elif self.state.grid.matrix[cy][cx] != EMPTY_BLOCK:
+                filled += 1
         return filled >= 3
 
     def is_perfect_clear(self,board):

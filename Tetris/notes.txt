@@ -7,10 +7,10 @@ MODERN TETRIS CHANGES:
 - Implement Lock Delay (Done)
 - Implement DAS/ARR (KINDA WACK, NEED TO FIX FOR ALL KEYS) (DONE)
     - also need to ensure multiple keys can be pressed at once (DONE)
-- instant soft drop (not necessary)
-BIG BAD BOSS
-- SRS Spin system (T spins, J & L spins, I spins, Z & S spins, NO O-SPINS) (NOT DONE, 180 offsets need to be fixed)
+- instant soft drop (I deemed not necessary)
+- SRS Spin system (ALL DONE!!!)
 
 Training:
-- develop scoring method (T-spin detection is TODO) (half done)
+- 4-wide, PC, T-spin detection (DONE)
+- develop actual reward function 
 - actually develop the training model

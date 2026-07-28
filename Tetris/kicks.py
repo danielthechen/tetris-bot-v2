@@ -18,3 +18,12 @@ O_OFFSET_DATA = {
     2: [(-1, 1)], # 180 from original
     3: [(-1, 0)],#anticlockwise once
 }
+
+KICKS_180 = {
+    0: [(0,0), ( 0,-1)],  # 0->2
+    1: [(0,0), ( 1, 0)],  # 1->3
+    2: [(0,0), ( 0, 1)],  # 2->0
+    3: [(0,0), (-1, 0)],  # 3->1
+}
+
+#thanks to https://www.reddit.com/r/Tetris/comments/gh7jd4/180_degree_kicktable/
