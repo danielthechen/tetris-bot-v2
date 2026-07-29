@@ -12,5 +12,6 @@ MODERN TETRIS CHANGES:
 
 Training:
 - 4-wide, PC, T-spin detection (DONE)
-- develop actual reward function 
-- actually develop the training model
+- Implement GYM
+    - develop actual reward function 
+    - actually develop the training model

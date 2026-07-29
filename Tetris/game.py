@@ -106,8 +106,6 @@ class Game:
                 print("T-SPIN DOUBLE")
             elif cleared_lines == 3:
                 print("T-SPIN TRIPLE")
-            else:
-                print("T-SPIN MINI")
 
         elif cleared_lines == 4:
             print("TETRIS")
