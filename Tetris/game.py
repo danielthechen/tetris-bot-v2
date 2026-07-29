@@ -135,6 +135,10 @@ class Game:
             self.state.did_rotate = False
         return did_move
 
+    def instant_soft_drop(self):
+        while self.soft_drop():
+            pass
+
     def hard_drop(self):
         while self.soft_drop():
             pass
@@ -213,7 +217,7 @@ class Game:
                 self.move_piece(self.active_dir,0)
 
         if inputs[pygame.K_z]:
-            self.soft_drop()
+            self.instant_soft_drop()
 
         should_drop = self.state.gravity.update_progress(dt)
         if should_drop:
