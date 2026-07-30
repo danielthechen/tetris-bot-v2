@@ -1,4 +1,4 @@
-from game import Game
+from game import Tetris_Game
 
-game = Game()
+game = Tetris_Game()
 game.start()

@@ -8,11 +8,10 @@ class Gravity:
     def reset_progress(self):
         self.progress = 0
 
-    def update_progress(self, dt):
-        self.speed += GRAV_ACCEL * dt
-        self.progress += self.speed * dt
+    def update_progress(self, ticks=1):
+        self.speed += GRAV_ACCEL * ticks
+        self.progress += self.speed * ticks
 
         if self.progress >= GRAV_THRESH:
             return True
-
         return False 

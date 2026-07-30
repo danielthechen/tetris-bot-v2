@@ -5,7 +5,7 @@ from piece import Piece
 class Gamestate:
     def __init__(self, grid: Grid, piece: Piece, gravity: Gravity, next_shape_ids: list, hold_piece: str, turn_held: bool, lock_timer: int, lock_resets: int, rotation_idx = int, did_rotate = bool):
         self.game_over = False
-        self.score = 0
+        self.lines_cleared = 0
         self.grid = grid
         self.piece = piece
         self.gravity = gravity

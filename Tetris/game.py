@@ -1,16 +1,17 @@
-import random
+import numpy as np
 import pygame
 from game_view import GameView
 from game_state import Gamestate
-from config import BOARD_COLUMNS, BOARD_ROWS, lock_delay, max_lock_reset, DAS, ARR
+from config import BOARD_COLUMNS, BOARD_ROWS, lock_delay, max_lock_reset, DAS, ARR, SEED
 from piece import Piece
 from grid import Grid, EMPTY_BLOCK
 from gravity import Gravity
 from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, KICKS_180, O_OFFSET_DATA
 
-class Game:
+class Tetris_Game:
     def __init__(self):
         self.bag = []
+        self.rng = np.random.default_rng(seed=SEED)
         self.active_dir_key = None
         self.active_dir = 0
         self.press_time = 0
@@ -21,7 +22,7 @@ class Game:
 
     def refill(self):
             self.bag = ['I','J','L','Z','S','O','T']
-            random.shuffle(self.bag)
+            self.rng.shuffle(self.bag)
     
     def get_random_shape_id(self):
         if not self.bag:
@@ -97,23 +98,23 @@ class Game:
         state = self.state
         state.grid.place_piece(state.piece)
 
-        cleared_lines = state.grid.clear_lines()
-
+        self.lines_cleared = state.grid.clear_lines()
+        
         if self.is_t_spin(state.piece):
-            if cleared_lines == 1:
+            if self.lines_cleared == 1:
                 print("T-SPIN SINGLE")
-            elif cleared_lines == 2:
+            elif self.lines_cleared == 2:
                 print("T-SPIN DOUBLE")
-            elif cleared_lines == 3:
+            elif self.lines_cleared == 3:
                 print("T-SPIN TRIPLE")
 
-        elif cleared_lines == 4:
+        elif self.lines_cleared == 4:
             print("TETRIS")
+
+        self.lines_cleared = 0
 
         if self.is_perfect_clear(state.grid.matrix):
             print("PERFECT CLEAR")
-
-        state.score += cleared_lines
 
         new_piece = Piece(state.next_shape_ids.pop(0))
         state.rotation_idx = 0
@@ -195,7 +196,7 @@ class Game:
         else:
             return None, 0
 
-    def update(self, inputs, dt):
+    def update(self, inputs, ticks=1):
         time_now = pygame.time.get_ticks()
         old_active_key = self.active_dir_key
 
@@ -209,17 +210,18 @@ class Game:
 
         if self.active_dir_key and self.active_dir_key != old_active_key:
             self.move_piece(self.active_dir, 0)
-            self.press_time = time_now
 
         if self.active_dir_key and inputs[self.active_dir_key]:
-            elapsed = time_now - self.press_time
-            if elapsed >= DAS and ((elapsed - DAS) % ARR < dt):
+            self.press_time += ticks
+            if self.press_time >= DAS and ((self.press_time - DAS) % ARR == 0):
                 self.move_piece(self.active_dir,0)
+        else:
+            self.press_time = 0
 
         if inputs[pygame.K_z]:
             self.instant_soft_drop()
 
-        should_drop = self.state.gravity.update_progress(dt)
+        should_drop = self.state.gravity.update_progress(ticks)
         if should_drop:
             self.soft_drop()
 
@@ -228,7 +230,7 @@ class Game:
             self.state.piece.x,
             self.state.piece.y + 1
         ):
-            self.state.lock_timer += dt
+            self.state.lock_timer += ticks
             if self.state.lock_timer >= lock_delay or self.state.lock_resets >= max_lock_reset:
                 self.handle_piece_landing()
 
@@ -241,8 +243,7 @@ class Game:
 
         is_running = True
         while is_running:
-            dt = clock.tick(60)
-
+            clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     is_running = False
@@ -269,7 +270,7 @@ class Game:
 
             inputs = pygame.key.get_pressed()
 
-            self.update(inputs, dt)
+            self.update(inputs, ticks=1)
             self.view.render(self.state)
 
         pygame.quit()

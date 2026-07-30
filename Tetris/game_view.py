@@ -34,7 +34,7 @@ class GameView:
                         colors[shape_id], x + j * CELL_SIZE, y + i * CELL_SIZE
                         )
 
-    def draw_sidebar(self,next_shape_ids, score):
+    def draw_sidebar(self,next_shape_ids):
         self.screen.fill(
             color_empty, (BOARD_WIDTH, 0, QUEUE_BORDER, GAME_HEIGHT)
         )
@@ -96,7 +96,7 @@ class GameView:
             (state.piece.y - OFFSET) * CELL_SIZE,
         )
 
-        self.draw_sidebar(next_shape_ids=state.next_shape_ids, score=state.score)
+        self.draw_sidebar(next_shape_ids=state.next_shape_ids)
 
         if state.game_over:
             self.draw_game_over_screen()
