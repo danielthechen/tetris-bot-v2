@@ -1,31 +1,6 @@
-import copy
 from collections import deque
 from rotation_masks import ROTATIONS
-from kicks import I_OFFSET_DATA, O_OFFSET_DATA, JLTSZ_OFFSET_DATA, KICKS_180
-
-# def bfs_rotate_piece(grid, piece, old_orientation, idx):
-#     new_orientation = (old_orientation - idx) % 4
-#     new_shape = ROTATIONS[piece.name][new_orientation]
-
-#     if idx != 2:
-#         if piece.name == 'I':
-#             data = I_OFFSET_DATA
-#         elif piece.name == 'O':
-#             data = O_OFFSET_DATA
-#         else:
-#             data = JLTSZ_OFFSET_DATA
-#         offsets = [tuple(a - b for a,b in zip(t1, t2)) for t1,t2 in zip(data[old_orientation],data[new_orientation])]
-#     else:
-#         offsets = KICKS_180[old_orientation]
-
-
-#     for dx, dy in offsets:
-#         if grid.can_fit_shape(new_shape, piece.x + dx, piece.y + dy):
-#             piece.shape = new_shape
-#             piece.x += dx
-#             piece.y += dy
-#             return new_orientation
-#     return old_orientation
+from bfs_kicks import KICK_DIFFS
 
 def bfs_positions(state):
     queue = deque([(state.piece.x, state.piece.y, state.rotation_idx)])
@@ -40,7 +15,7 @@ def bfs_positions(state):
 
         shape = ROTATIONS[state.piece.name][rot]
         if not state.grid.can_fit_shape(shape, x, y+1):
-            legal_positions.append((x, y, rot, shape))
+            legal_positions.append((x, y, rot))
 
         for action in ["left", "right", "down", "cw", "ccw", "rot180"]:
             nx, ny, nrot = x, y, rot
@@ -63,18 +38,19 @@ def bfs_positions(state):
                 new_shape = ROTATIONS[state.piece.name][nrot]
                 if idx != 2:
                     if state.piece.name == 'I':
-                        data = I_OFFSET_DATA
+                        offsets = KICK_DIFFS['I'][rot][nrot]
                     elif state.piece.name == 'O':
-                        data = O_OFFSET_DATA
+                        offsets = KICK_DIFFS['O'][rot][nrot]
                     else:
-                        data = JLTSZ_OFFSET_DATA
-                    offsets = [tuple(a - b for a,b in zip(t1, t2)) for t1,t2 in zip(data[rot],data[nrot])]
+                        offsets = KICK_DIFFS['JLTSZ'][rot][nrot]
                 else:
-                    offsets = KICKS_180[rot]
+                    offsets = KICK_DIFFS['180'][rot]
 
                 for dx, dy in offsets:
-                    if state.grid.can_fit_shape(new_shape, x + dx, y + dy):
-                        nx, ny = x + dx, y + dy
+                    nx, ny = x + dx, y + dy
+                    success = state.grid.can_fit_shape(new_shape, x + dx, y + dy)
+                    # print(f"{state.piece.name} {rot}->{nrot} kick ({x},{y}) -> ({nx},{ny}) success={success}")
+                    if success:
                         nshape = new_shape
                         valid = True
                         break
