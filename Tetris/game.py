@@ -7,6 +7,7 @@ from piece import Piece
 from grid import Grid, EMPTY_BLOCK
 from gravity import Gravity
 from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, KICKS_180, O_OFFSET_DATA
+from bfs_search import bfs_positions
 
 class Tetris_Game:
     def __init__(self):
@@ -123,6 +124,19 @@ class Tetris_Game:
             state.piece = new_piece
             state.next_shape_ids.append(self.get_random_shape_id())
             state.turn_held = False
+
+            #BFS RENDER
+            # placements = bfs_positions(self.state)
+            # for (px, py, prot, shape) in placements:
+            #     temp_piece = Piece(state.piece.name)
+            #     temp_piece.x, temp_piece.y = px, py
+            #     temp_piece.shape = shape
+            #     self.state.piece = temp_piece
+            #     self.state.rotation_idx = prot
+            #     self.view.render(self.state)
+            #     pygame.time.wait(300)
+            # self.state.piece = new_piece
+                    
         else:
             state.game_over = True
 
@@ -269,7 +283,6 @@ class Tetris_Game:
                             self.state = self.get_initial_state()
 
             inputs = pygame.key.get_pressed()
-
             self.update(inputs, ticks=1)
             self.view.render(self.state)
 

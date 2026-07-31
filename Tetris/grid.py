@@ -18,7 +18,7 @@ class Grid:
                 if board_x < 0 or board_x >= BOARD_COLUMNS:
                     return False
 
-                if board_y >= TRUE_ROWS:
+                if board_y < 0 or board_y >= TRUE_ROWS:
                     return False
                 
                 if self.matrix[board_y][board_x] != EMPTY_BLOCK:
