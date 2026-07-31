@@ -125,17 +125,17 @@ class Tetris_Game:
             state.next_shape_ids.append(self.get_random_shape_id())
             state.turn_held = False
 
-            #BFS RENDER
-            # placements = bfs_positions(self.state)
-            # for (px, py, prot, shape) in placements:
-            #     temp_piece = Piece(state.piece.name)
-            #     temp_piece.x, temp_piece.y = px, py
-            #     temp_piece.shape = shape
-            #     self.state.piece = temp_piece
-            #     self.state.rotation_idx = prot
-            #     self.view.render(self.state)
-            #     pygame.time.wait(300)
-            # self.state.piece = new_piece
+            # BFS RENDER
+            placements = bfs_positions(self.state)
+            for (px, py, prot, shape) in placements:
+                temp_piece = Piece(state.piece.name)
+                temp_piece.x, temp_piece.y = px, py
+                temp_piece.shape = shape
+                self.state.piece = temp_piece
+                self.state.rotation_idx = prot
+                self.view.render(self.state)
+                pygame.time.wait(300)
+            self.state.piece = new_piece
                     
         else:
             state.game_over = True
