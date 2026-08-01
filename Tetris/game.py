@@ -107,7 +107,7 @@ class Tetris_Game:
                 return (kick_num + 1)
         return None
 
-    def handle_piece_landing(self):
+    def handle_piece_landing(self, text= True):
         state = self.state
         state.grid.place_piece(state.piece)
         
@@ -115,30 +115,31 @@ class Tetris_Game:
 
         self.lines_cleared = state.grid.clear_lines()
 
+        pc = self.is_perfect_clear(state.grid.matrix)
+
         #credit: https://tetrio.wiki.gg/wiki/Spins#O-Spin
 
-        if self.lines_cleared == 4:
-            print_line = "TETRIS"
-        elif self.lines_cleared == 3:
-            print_line = "TRIPLE"
-        elif self.lines_cleared == 2:
-            print_line = "DOUBLE"
-        elif self.lines_cleared == 1:
-            print_line = "SINGLE"
-        else:
-            print_line = ""
+        if text:
+            if self.lines_cleared == 4:
+                print_line = "TETRIS"
+            elif self.lines_cleared == 3:
+                print_line = "TRIPLE"
+            elif self.lines_cleared == 2:
+                print_line = "DOUBLE"
+            elif self.lines_cleared == 1:
+                print_line = "SINGLE"
+            else:
+                print_line = ""
 
-        if t_spin == 2:
-            print("T SPIN", print_line)
-        elif t_spin == 1:
-            print("T SPIN MINI", print_line)
-        elif print_line:
-            print(print_line)
+            if t_spin == 2:
+                print("T SPIN", print_line)
+            elif t_spin == 1:
+                print("T SPIN MINI", print_line)
+            elif print_line:
+                print(print_line)
 
-        self.lines_cleared = 0
-
-        if self.is_perfect_clear(state.grid.matrix):
-            print("PERFECT CLEAR")
+            if pc:
+                print("PERFECT CLEAR")
 
         new_piece = Piece(state.next_shape_ids.pop(0))
         state.rotation_idx = 0
@@ -148,13 +149,13 @@ class Tetris_Game:
             state.next_shape_ids.append(self.get_random_shape_id())
             state.turn_held = False
 
-            # # FIXME BFS RENDER
+            # FIXME BFS RENDER
             # placements = bfs_positions(self.state)
-            #print(len(placements))
+            # # print(len(placements))
             # for (px, py, prot) in placements:
             #     temp_piece = Piece(state.piece.name)
             #     temp_piece.x, temp_piece.y = px, py
-            #     print(px, py, prot)
+            #     # print(px, py, prot)
             #     temp_piece.shape = ROTATIONS[state.piece.name][prot]
             #     self.state.piece = temp_piece
             #     self.view.render(self.state)
@@ -163,9 +164,12 @@ class Tetris_Game:
                     
         else:
             state.game_over = True
+            state.next_shape_ids.append(self.get_random_shape_id())
 
         state.lock_timer = 0
         state.lock_resets = 0
+
+        return self.lines_cleared, t_spin, pc
 
     def soft_drop(self):
         self.state.gravity.reset_progress()

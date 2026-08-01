@@ -1,11 +1,12 @@
-from enum import Enum
 import gymnasium as gym
 from gymnasium import spaces
 import pygame
 import numpy as np
+from bfs_search import bfs_positions
 from game import Tetris_Game
 from grid import EMPTY_BLOCK
 from game_view import GameView
+from rotation_masks import ROTATIONS
 
 PIECE_IDS = {
     "I": 0,
@@ -16,16 +17,6 @@ PIECE_IDS = {
     "J": 5,
     "L": 6
 }
-
-class Actions(Enum):
-    left = 0
-    right = 1
-    turn_cw = 2
-    turn_ccw = 3
-    turn_180 = 4
-    hard_drop = 5
-    soft_drop = 6
-    hold = 7
 
 class TetrisEnv(gym.Env):
     metadata = {"render_modes": ["human","rgb_array"], "render_fps": 60}
@@ -41,7 +32,9 @@ class TetrisEnv(gym.Env):
                 dtype = np.int8
         )
 
-        self.action_space = spaces.Discrete(8)
+        #variable action-space
+        self.action_space = spaces.Discrete(40)
+
         if render_mode == "human":
             self.view = GameView()
             pygame.init()
@@ -72,39 +65,43 @@ class TetrisEnv(gym.Env):
 
     def step(self, action):
         reward = 0
-        
-        if action == Actions.left.value:
-            self.game.move_piece(-1, 0)
-        elif action == Actions.right.value:
-            self.game.move_piece(1, 0)
-        elif action == Actions.turn_cw.value:
-            self.game.rotate_piece(-1)
-        elif action == Actions.turn_ccw.value:
-            self.game.rotate_piece(1)
-        elif action == Actions.turn_180.value:
-            self.game.rotate_piece(2)
-        elif action == Actions.hard_drop.value:
-            self.game.hard_drop()
-            reward += 100
-        elif action == Actions.soft_drop.value:
-            self.game.soft_drop()
+
+        lines_cleared, t_spin_type, pc = 0, 0, False
+
+        placements = bfs_positions(self.game.state)
+
+        if placements:
+            if action < len(placements):
+                px, py, prot = placements[action]
+                self.game.state.piece.x = px
+                self.game.state.piece.y = py
+                self.game.state.piece.shape = ROTATIONS[self.game.state.piece.name][prot]
+                lines_cleared, t_spin_type, pc = self.game.handle_piece_landing(text= False)
+            else:
+                pass
+
+        if lines_cleared == 1:
             reward += 1
-        elif action == Actions.hold.value:
-            self.game.hold()
-            self.game.state.turn_held = True
+        elif lines_cleared == 2:
+            reward += 2
+        elif lines_cleared == 3:
+            reward += 5
+        elif lines_cleared == 4:
+            reward += 10
 
-        self.game.update(inputs={
-            pygame.K_LEFT: False,
-            pygame.K_RIGHT: False,
-            pygame.K_z: False,
-            pygame.K_BACKQUOTE: False,
-        }, ticks=1)
+        if t_spin_type == 2:
+            reward += 6
+        elif t_spin_type == 1:
+            reward += 1
 
-        if self.game.state.lines_cleared > 0:
-            reward += self.game.state.lines_cleared * 10
+        if pc:
+            reward += 20
+
         if self.game.state.game_over:
-            reward -= 1000
-        
+            reward -= 100
+        else:
+            reward += 0.1
+
         terminated = self.game.state.game_over
         observation = self._get_obs()
         info = self._get_info()
@@ -122,7 +119,7 @@ class TetrisEnv(gym.Env):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.close()
-        pygame.time.wait(50) 
+        # pygame.time.wait(50) 
 
     def close(self):
         pygame.display.quit()
