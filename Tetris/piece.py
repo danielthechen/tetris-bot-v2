@@ -9,6 +9,7 @@ class Piece:
         self.x = 3
         #Jstris: -1, Tetrio: -2, Normal: 0
         self.y = -1 + OFFSET
+        self.kick = 0
 
     def move(self, move_x, move_y):
         self.x += move_x

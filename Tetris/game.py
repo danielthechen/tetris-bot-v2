@@ -104,25 +104,36 @@ class Tetris_Game:
                 if not self.state.grid.can_fit_shape(piece.shape, piece.x, piece.y + 1):
                     self.state.lock_timer = 0
                     self.state.lock_resets += 1
-                return kick_num
+                return (kick_num + 1)
         return None
 
     def handle_piece_landing(self):
         state = self.state
         state.grid.place_piece(state.piece)
+        
+        t_spin = self.is_t_spin(state.piece)
 
         self.lines_cleared = state.grid.clear_lines()
-        
-        if self.is_t_spin(state.piece):
-            if self.lines_cleared == 1:
-                print("T-SPIN SINGLE")
-            elif self.lines_cleared == 2:
-                print("T-SPIN DOUBLE")
-            elif self.lines_cleared == 3:
-                print("T-SPIN TRIPLE")
 
-        elif self.lines_cleared == 4:
-            print("TETRIS")
+        #credit: https://tetrio.wiki.gg/wiki/Spins#O-Spin
+
+        if self.lines_cleared == 4:
+            print_line = "TETRIS"
+        elif self.lines_cleared == 3:
+            print_line = "TRIPLE"
+        elif self.lines_cleared == 2:
+            print_line = "DOUBLE"
+        elif self.lines_cleared == 1:
+            print_line = "SINGLE"
+        else:
+            print_line = ""
+
+        if t_spin == 2:
+            print("T SPIN", print_line)
+        elif t_spin == 1:
+            print("T SPIN MINI", print_line)
+        elif print_line:
+            print(print_line)
 
         self.lines_cleared = 0
 
@@ -139,7 +150,7 @@ class Tetris_Game:
 
             # # FIXME BFS RENDER
             # placements = bfs_positions(self.state)
-            # #print(len(placements))
+            #print(len(placements))
             # for (px, py, prot) in placements:
             #     temp_piece = Piece(state.piece.name)
             #     temp_piece.x, temp_piece.y = px, py
@@ -189,16 +200,43 @@ class Tetris_Game:
 
     def is_t_spin(self,piece):
         if piece.name != "T" or not self.state.did_rotate:
-            return False
+            return 0
         x, y = piece.x, piece.y
-        corners = [(x-1, y-1), (x+1, y-1), (x-1, y+1), (x+1, y+1)]
+        corners = [(x , y), (x+2, y), (x+2, y+2), (x, y+2)]
         filled = 0
         for cx, cy in corners:
             if cx < 0 or cx >= BOARD_COLUMNS or cy < 0 or cy >= BOARD_ROWS:
                 filled += 1
             elif self.state.grid.matrix[cy][cx] != EMPTY_BLOCK:
                 filled += 1
-        return filled >= 3
+
+        if filled >= 3:
+            head_filled = 0
+            head_checks = {
+            0: [(x, y), (x+2, y)],
+            1: [(x+2, y+2), (x+2, y)],
+            2: [(x+2, y+2), (x, y+2)],
+            3: [(x, y), (x, y+2)],
+            }
+
+            #print(self.state.rotation_idx)
+            #print(head_checks[self.state.rotation_idx])
+
+            head_filled = 0
+            for hx, hy in head_checks[self.state.rotation_idx]:
+                #print(self.state.grid.matrix[hy][hx])
+                if self.state.grid.matrix[hy][hx] != EMPTY_BLOCK:
+                    head_filled += 1
+
+            #print(self.state.piece.kick)
+            #print(head_filled)
+
+            if head_filled == 2 or self.state.piece.kick == 5:
+                return 2
+            else:
+                return 1
+        return 0
+            
 
     def is_perfect_clear(self,board):
         return all(cell == EMPTY_BLOCK for row in board for cell in row)
@@ -277,13 +315,13 @@ class Tetris_Game:
                 elif event.type == pygame.KEYDOWN:
                     if not self.state.game_over:
                         if event.key == pygame.K_UP:
-                            self.rotate_piece(1)
+                            self.state.piece.kick = self.rotate_piece(1)
         
                         elif event.key == pygame.K_DOWN:
-                            self.rotate_piece(-1)
+                            self.state.piece.kick = self.rotate_piece(-1)
 
                         elif event.key == pygame.K_RSHIFT:
-                            self.rotate_piece(2)
+                            self.state.piece.kick = self.rotate_piece(2)
 
                         elif event.key == pygame.K_SPACE and not self.state.turn_held:
                             self.hold()
@@ -297,7 +335,8 @@ class Tetris_Game:
 
             inputs = pygame.key.get_pressed()
             self.update(inputs, ticks=1)
-            print(self.state.piece.x, self.state.piece.y, self.state.rotation_idx)
+            #print(self.state.piece.x, self.state.piece.y, self.state.rotation_idx)
+            #print(self.state.piece.kick)
             self.view.render(self.state)
 
         pygame.quit()

@@ -87,7 +87,7 @@ class TetrisEnv(gym.Env):
             self.game.hard_drop()
             reward += 100
         elif action == Actions.soft_drop.value:
-            self.game.instant_soft_drop()
+            self.game.soft_drop()
             reward += 1
         elif action == Actions.hold.value:
             self.game.hold()
