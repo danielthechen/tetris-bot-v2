@@ -72,15 +72,16 @@ class Tetris_Game:
         new_shape = piece.rotate(idx)
         new_orientation = (old_orientation - idx) % 4
 
-        if idx != 2:
+        if idx != 2 and piece.name != 'O':
             if piece.name == 'I':
                 offsets = KICK_DIFFS['I'][old_orientation][new_orientation]
-            elif piece.name == 'O':
-                offsets = KICK_DIFFS['O'][old_orientation][new_orientation]
             else:
                 offsets = KICK_DIFFS['JLTSZ'][old_orientation][new_orientation]
         else:
-            offsets = KICK_DIFFS['180'][old_orientation]
+            if piece.name == 'O':
+                offsets = KICK_DIFFS['O'][old_orientation][new_orientation]
+            else: 
+                offsets = KICK_DIFFS['180'][old_orientation]
 
             # if piece.name == 'I':
             #     data = I_OFFSET_DATA
@@ -93,7 +94,7 @@ class Tetris_Game:
         #     offsets = KICKS_180[old_orientation]
 
 
-        for dx, dy in offsets:
+        for kick_num, (dx, dy) in enumerate(offsets):
             if self.state.grid.can_fit_shape(new_shape, piece.x + dx, piece.y + dy):
                 piece.shape = new_shape
                 piece.x += dx
@@ -103,8 +104,8 @@ class Tetris_Game:
                 if not self.state.grid.can_fit_shape(piece.shape, piece.x, piece.y + 1):
                     self.state.lock_timer = 0
                     self.state.lock_resets += 1
-                return True
-        return False
+                return kick_num
+        return None
 
     def handle_piece_landing(self):
         state = self.state
@@ -137,17 +138,17 @@ class Tetris_Game:
             state.turn_held = False
 
             # # FIXME BFS RENDER
-            placements = bfs_positions(self.state)
-            #print(len(placements))
-            for (px, py, prot) in placements:
-                temp_piece = Piece(state.piece.name)
-                temp_piece.x, temp_piece.y = px, py
-                #print(px, py, prot)
-                temp_piece.shape = ROTATIONS[state.piece.name][prot]
-                self.state.piece = temp_piece
-                self.view.render(self.state)
-                pygame.time.wait(50)
-            state.piece = new_piece
+            # placements = bfs_positions(self.state)
+            # #print(len(placements))
+            # for (px, py, prot) in placements:
+            #     temp_piece = Piece(state.piece.name)
+            #     temp_piece.x, temp_piece.y = px, py
+            #     print(px, py, prot)
+            #     temp_piece.shape = ROTATIONS[state.piece.name][prot]
+            #     self.state.piece = temp_piece
+            #     self.view.render(self.state)
+            #     pygame.time.wait(50)
+            # state.piece = new_piece
                     
         else:
             state.game_over = True
@@ -296,7 +297,7 @@ class Tetris_Game:
 
             inputs = pygame.key.get_pressed()
             self.update(inputs, ticks=1)
-            #print(self.state.piece.x, self.state.piece.y, self.state.rotation_idx)
+            print(self.state.piece.x, self.state.piece.y, self.state.rotation_idx)
             self.view.render(self.state)
 
         pygame.quit()

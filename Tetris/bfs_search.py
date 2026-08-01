@@ -49,7 +49,7 @@ def bfs_positions(state):
                 for dx, dy in offsets:
                     nx, ny = x + dx, y + dy
                     success = state.grid.can_fit_shape(new_shape, x + dx, y + dy)
-                    # print(f"{state.piece.name} {rot}->{nrot} kick ({x},{y}) -> ({nx},{ny}) success={success}")
+                    #print(f"{state.piece.name} {rot}->{nrot} kick ({x},{y}) -> ({nx},{ny}) success={success}")
                     if success:
                         nshape = new_shape
                         valid = True
