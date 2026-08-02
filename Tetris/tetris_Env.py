@@ -42,7 +42,7 @@ class TetrisEnv(gym.Env):
             self.game.view.init_display()
 
     def _get_obs(self):
-        grid = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8).flatten()
+        grid = (np.array(self.game.state.grid.matrix) != "0").astype(np.int8).flatten()
         current_piece = np.array([PIECE_IDS[self.game.state.piece.name]], dtype=np.int8)
         queue = np.array([PIECE_IDS[name] for name in self.game.state.next_shape_ids], dtype=np.int8)
         hold_piece = np.array([PIECE_IDS[self.game.state.hold_piece] if self.game.state.hold_piece else 7],dtype=np.int8)
@@ -107,7 +107,7 @@ class TetrisEnv(gym.Env):
             reward += 20
 
         if self.game.state.game_over:
-            reward -= 100
+            reward -= 50
         else:
             reward += 0.1
 
@@ -122,8 +122,8 @@ class TetrisEnv(gym.Env):
                     self.close()
             pygame.time.wait(50) 
 
-        pygame.time.wait(300)
         return observation, reward, terminated, False, info
+
 
     def close(self):
         pygame.display.quit()

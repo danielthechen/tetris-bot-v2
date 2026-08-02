@@ -116,7 +116,7 @@ class Tetris_Game:
         self.lines_cleared = state.grid.clear_lines()
 
         pc = self.is_perfect_clear(state.grid.matrix)
-
+    
         #credit: https://tetrio.wiki.gg/wiki/Spins#O-Spin
 
         if text:
@@ -339,6 +339,7 @@ class Tetris_Game:
 
             inputs = pygame.key.get_pressed()
             self.update(inputs, ticks=1)
+        
             #print(self.state.piece.x, self.state.piece.y, self.state.rotation_idx)
             #print(self.state.piece.kick)
             self.view.render(self.state)
