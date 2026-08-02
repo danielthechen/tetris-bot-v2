@@ -203,7 +203,7 @@ class Tetris_Game:
             state.game_over = True
 
     def is_t_spin(self,piece):
-        if piece.name != "T" or not self.state.did_rotate:
+        if piece.name != 2 or not self.state.did_rotate:
             return 0
         x, y = piece.x, piece.y
         corners = [(x , y), (x+2, y), (x+2, y+2), (x, y+2)]

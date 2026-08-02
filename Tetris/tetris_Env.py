@@ -7,17 +7,6 @@ from game import Tetris_Game
 from grid import EMPTY_BLOCK
 from game_view import GameView
 from rotation_masks import ROTATIONS
-from piece import Piece
-
-PIECE_IDS = {
-    "I": 0,
-    "O": 1,
-    "T": 2,
-    "S": 3,
-    "Z": 4,
-    "J": 5,
-    "L": 6
-}
 
 class TetrisEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 60}
@@ -42,10 +31,10 @@ class TetrisEnv(gym.Env):
             self.game.view.init_display()
 
     def _get_obs(self):
-        grid = (np.array(self.game.state.grid.matrix) != "0").astype(np.int8).flatten()
-        current_piece = np.array([PIECE_IDS[self.game.state.piece.name]], dtype=np.int8)
-        queue = np.array([PIECE_IDS[name] for name in self.game.state.next_shape_ids], dtype=np.int8)
-        hold_piece = np.array([PIECE_IDS[self.game.state.hold_piece] if self.game.state.hold_piece else 7],dtype=np.int8)
+        grid = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8).flatten()
+        current_piece = np.array([self.game.state.piece.name], dtype=np.int8)
+        queue = np.array([name for name in self.game.state.next_shape_ids], dtype=np.int8)
+        hold_piece = np.array([self.game.state.hold_piece if self.game.state.hold_piece else 7],dtype=np.int8)
         placements = np.array(bfs_positions(self.game.state))
         placements_vec = np.zeros((50*3),dtype=np.int8)
         for i, (px,py,prot) in enumerate(placements[:50]):
@@ -88,6 +77,7 @@ class TetrisEnv(gym.Env):
                 lines_cleared, t_spin_type, pc = self.game.handle_piece_landing(text= False)
             else:
                 self.game.state.game_over = True
+                print("hi")
 
         if lines_cleared == 1:
             reward += 1
