@@ -5,7 +5,6 @@ import numpy as np
 from bfs_search import bfs_positions
 from game import Tetris_Game
 from grid import EMPTY_BLOCK
-from game_view import GameView
 from rotation_masks import ROTATIONS
 
 class TetrisEnv(gym.Env):
@@ -18,8 +17,7 @@ class TetrisEnv(gym.Env):
         self.observation_space = spaces.Box(
                 low=0,
                 high=7,
-                shape = (40*10 + 1 + 5 + 1 + 50*3 , ),
-                dtype = np.int8
+                shape = (40*10 + 1 + 5 + 1 + 50*3, ),
         )
 
         #variable action-space
@@ -32,11 +30,11 @@ class TetrisEnv(gym.Env):
 
     def _get_obs(self):
         grid = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8).flatten()
-        current_piece = np.array([self.game.state.piece.name], dtype=np.int8)
-        queue = np.array([name for name in self.game.state.next_shape_ids], dtype=np.int8)
-        hold_piece = np.array([self.game.state.hold_piece if self.game.state.hold_piece else 7],dtype=np.int8)
+        current_piece = np.array([self.game.state.piece.name])
+        queue = np.array([name for name in self.game.state.next_shape_ids])
+        hold_piece = np.array([self.game.state.hold_piece if self.game.state.hold_piece else 7])
         placements = np.array(bfs_positions(self.game.state))
-        placements_vec = np.zeros((50*3),dtype=np.int8)
+        placements_vec = np.zeros((50*3))
         for i, (px,py,prot) in enumerate(placements[:50]):
             placements_vec[i*3:(i*3)+3] = [px,py,prot]
         return np.concatenate([grid,current_piece,queue,hold_piece, placements_vec])
@@ -46,6 +44,7 @@ class TetrisEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
+        pygame.time.wait(300)
 
         self.game.state = self.game.get_initial_state()
         self.game.bag = []
@@ -67,7 +66,6 @@ class TetrisEnv(gym.Env):
         lines_cleared, t_spin_type, pc = 0, 0, False
 
         placements = bfs_positions(self.game.state)
-
         if placements:
             if action < len(placements):
                 px, py, prot = placements[action]
@@ -76,6 +74,7 @@ class TetrisEnv(gym.Env):
                 self.game.state.piece.shape = ROTATIONS[self.game.state.piece.name][prot]
                 lines_cleared, t_spin_type, pc = self.game.handle_piece_landing(text= False)
             else:
+                #shouldn't ever get here
                 self.game.state.game_over = True
                 print("hi")
 
