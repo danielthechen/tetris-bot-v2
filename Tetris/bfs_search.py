@@ -37,9 +37,9 @@ def bfs_positions(state):
                 nrot = (rot - idx) % 4
                 new_shape = ROTATIONS[state.piece.name][nrot]
                 if idx != 2:
-                    if state.piece.name == 'I':
+                    if state.piece.name == 7:
                         offsets = KICK_DIFFS['I'][rot][nrot]
-                    elif state.piece.name == 'O':
+                    elif state.piece.name == 1:
                         offsets = KICK_DIFFS['O'][rot][nrot]
                     else:
                         offsets = KICK_DIFFS['JLTSZ'][rot][nrot]

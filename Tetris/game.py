@@ -24,7 +24,7 @@ class Tetris_Game:
         self.view = GameView()
 
     def refill(self):
-            self.bag = ['I','J','L','Z','S','O','T']
+            self.bag = [1,2,3,4,5,6,7]
             self.rng.shuffle(self.bag)
     
     def get_random_shape_id(self):
@@ -72,13 +72,13 @@ class Tetris_Game:
         new_shape = piece.rotate(idx)
         new_orientation = (old_orientation - idx) % 4
 
-        if idx != 2 and piece.name != 'O':
-            if piece.name == 'I':
+        if idx != 2 and piece.name != 1:
+            if piece.name == 7:
                 offsets = KICK_DIFFS['I'][old_orientation][new_orientation]
             else:
                 offsets = KICK_DIFFS['JLTSZ'][old_orientation][new_orientation]
         else:
-            if piece.name == 'O':
+            if piece.name == 1:
                 offsets = KICK_DIFFS['O'][old_orientation][new_orientation]
             else: 
                 offsets = KICK_DIFFS['180'][old_orientation]

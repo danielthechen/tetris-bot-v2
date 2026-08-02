@@ -2,7 +2,7 @@ import numpy as np
 ROTATIONS = {
 
     #I Piece
-    'I' : [
+    7 : [
         np.array([
         [0, 0, 0, 0],
         [1, 1, 1, 1],
@@ -33,7 +33,7 @@ ROTATIONS = {
     ],
 
     #J Piece
-    'J' : [
+    5 : [
         np.array([
         [1, 0, 0],
         [1, 1, 1],
@@ -60,7 +60,7 @@ ROTATIONS = {
     ],
     
     #L Piece
-    'L' : [
+    6 : [
         np.array([
         [0, 0, 1],
         [1, 1, 1],
@@ -87,7 +87,7 @@ ROTATIONS = {
     ],
 
     #O Piece
-    'O' : [
+    1 : [
         np.array([
         [0, 1, 1],
         [0, 1, 1],
@@ -114,7 +114,7 @@ ROTATIONS = {
     ],
 
     #Z Piece
-    'Z' : [
+    4 : [
         np.array([
         [1, 1, 0],
         [0, 1, 1],
@@ -141,7 +141,7 @@ ROTATIONS = {
     ],
 
     #S Piece
-    'S' : [
+    3 : [
         np.array([
         [0, 1, 1],
         [1, 1, 0],
@@ -168,7 +168,7 @@ ROTATIONS = {
     ],
 
     #T Piece
-    'T' : [
+    2 : [
         np.array([
         [0, 1, 0],
         [1, 1, 1],
