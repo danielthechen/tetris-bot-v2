@@ -7,6 +7,7 @@ from game import Tetris_Game
 from grid import EMPTY_BLOCK
 from game_view import GameView
 from rotation_masks import ROTATIONS
+from piece import Piece
 
 PIECE_IDS = {
     "I": 0,
@@ -19,7 +20,7 @@ PIECE_IDS = {
 }
 
 class TetrisEnv(gym.Env):
-    metadata = {"render_modes": ["human","rgb_array"], "render_fps": 60}
+    metadata = {"render_modes": ["human"], "render_fps": 60}
 
     def __init__(self, render_mode=None):
         self.render_mode = render_mode
@@ -28,25 +29,28 @@ class TetrisEnv(gym.Env):
         self.observation_space = spaces.Box(
                 low=0,
                 high=7,
-                shape = (40*10 + 1 + 5 + 1,),
+                shape = (40*10 + 1 + 5 + 1 + 50*3 , ),
                 dtype = np.int8
         )
 
         #variable action-space
-        self.action_space = spaces.Discrete(40)
+        self.action_space = spaces.Discrete(50)
 
         if render_mode == "human":
-            self.view = GameView()
             pygame.init()
             pygame.display.set_caption("Tetris RL")
-            self.view.init_display()
+            self.game.view.init_display()
 
     def _get_obs(self):
         grid = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8).flatten()
         current_piece = np.array([PIECE_IDS[self.game.state.piece.name]], dtype=np.int8)
         queue = np.array([PIECE_IDS[name] for name in self.game.state.next_shape_ids], dtype=np.int8)
         hold_piece = np.array([PIECE_IDS[self.game.state.hold_piece] if self.game.state.hold_piece else 7],dtype=np.int8)
-        return np.concatenate([grid,current_piece,queue,hold_piece])
+        placements = np.array(bfs_positions(self.game.state))
+        placements_vec = np.zeros((50*3),dtype=np.int8)
+        for i, (px,py,prot) in enumerate(placements[:50]):
+            placements_vec[i*3:(i*3)+3] = [px,py,prot]
+        return np.concatenate([grid,current_piece,queue,hold_piece, placements_vec])
     
     def _get_info(self):
         return {"score":0}
@@ -55,11 +59,16 @@ class TetrisEnv(gym.Env):
         super().reset(seed=seed)
 
         self.game.state = self.game.get_initial_state()
+        self.game.bag = []
         obs = self._get_obs()
         info = self._get_info()
 
         if self.render_mode == "human":
-            self._render_frame()
+            self.game.view.render(self.game.state)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.close()
+            pygame.time.wait(50) 
 
         return obs, info
 
@@ -78,7 +87,7 @@ class TetrisEnv(gym.Env):
                 self.game.state.piece.shape = ROTATIONS[self.game.state.piece.name][prot]
                 lines_cleared, t_spin_type, pc = self.game.handle_piece_landing(text= False)
             else:
-                pass
+                self.game.state.game_over = True
 
         if lines_cleared == 1:
             reward += 1
@@ -107,19 +116,14 @@ class TetrisEnv(gym.Env):
         info = self._get_info()
 
         if self.render_mode == "human":
-            self._render_frame()
+            self.game.view.render(self.game.state)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.close()
+            pygame.time.wait(50) 
+
+        pygame.time.wait(300)
         return observation, reward, terminated, False, info
-
-    def render(self):
-        if self.render_mode == "rgb_array":
-            return self._render_frame()
-
-    def _render_frame(self):
-        self.view.render(self.game.state)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.close()
-        # pygame.time.wait(50) 
 
     def close(self):
         pygame.display.quit()
