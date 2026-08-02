@@ -5,13 +5,14 @@ MODERN TETRIS CHANGES:
 - Hold piece (Done)
 - Grid Max Height is actually above 20 rows : GAME OVER only when piece spawns in with collision (Done)
 - Implement Lock Delay (Done)
-- Implement DAS/ARR (KINDA WACK, NEED TO FIX FOR ALL KEYS) (DONE)
-    - also need to ensure multiple keys can be pressed at once (DONE)
-- instant soft drop (I deemed not necessary)
+- Implement DAS/ARR (KINDA BUGGED, NEED TO FIX FOR ALL KEYS) (DONE)
+    - also need to ensure L/R keys can be pressed at once (DONE)
+- instant soft drop (I deemed not necessary) (DONE)
 - SRS Spin system (ALL DONE!!!)
 
 Training:
+- Tick based timing (DONE)
 - 4-wide, PC, T-spin detection (DONE)
-- Implement GYM
+- Implement GYMNASIUM
     - develop actual reward function 
     - actually develop the training model

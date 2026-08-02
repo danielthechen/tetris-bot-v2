@@ -44,8 +44,6 @@ class TetrisEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        pygame.time.wait(300)
-
         self.game.state = self.game.get_initial_state()
         self.game.bag = []
         obs = self._get_obs()

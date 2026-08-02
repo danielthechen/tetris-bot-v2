@@ -1,13 +1,13 @@
 import numpy as np
 import pygame
-from rotation_masks import ROTATIONS
+#from rotation_masks import ROTATIONS
 from game_view import GameView
 from game_state import Gamestate
 from config import BOARD_COLUMNS, BOARD_ROWS, lock_delay, max_lock_reset, DAS, ARR, SEED
 from piece import Piece
 from grid import Grid, EMPTY_BLOCK
 from gravity import Gravity
-from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, KICKS_180, O_OFFSET_DATA
+#from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, KICKS_180, O_OFFSET_DATA
 from bfs_search import bfs_positions
 from bfs_kicks import KICK_DIFFS
 
