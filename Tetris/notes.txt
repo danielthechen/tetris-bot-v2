@@ -16,3 +16,17 @@ Training:
 - Implement GYMNASIUM
     - develop actual reward function 
     - actually develop the training model
+    - heuristic function:
+        - holes
+        - bumpiness
+        - Height (middle, top)
+        - blockades
+        - overhangs
+        - towers in the middle (towers to right or left can be good for spiking)
+        - T spin opportunity
+        - wasted T
+        - PC
+        - TETRIS
+        - combo/b2b
+        - which well column
+
