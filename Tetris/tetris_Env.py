@@ -2,6 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import pygame
 import numpy as np
+from config import BOARD_COLUMNS, BOARD_ROWS, TRUE_ROWS
 from bfs_search import bfs_positions
 from game import Tetris_Game
 from grid import EMPTY_BLOCK
@@ -17,7 +18,7 @@ class TetrisEnv(gym.Env):
         self.observation_space = spaces.Box(
                 low=0,
                 high=7,
-                shape = (40*10 + 1 + 5 + 1 + 50*3, ),
+                shape = (40*10 + 1 + 5 + 1 + 50*3 + 23, ),
         )
 
         #variable action-space
@@ -28,6 +29,74 @@ class TetrisEnv(gym.Env):
             pygame.display.set_caption("Tetris RL")
             self.game.view.init_display()
 
+    def get_heights(self,board):
+        range_1_40 = np.array(list(range(1,TRUE_ROWS  + 1)))
+        heights = np.array([int((column * range_1_40).max()) for column in board.T])
+        return heights
+
+    def get_holes(self,board):
+        holes = ((board == 0) & (np.cumsum(board, axis=0) < np.sum(board, axis=0))).sum()
+        return holes
+
+    def get_blockades(self,board):
+        grid_of_1s = np.ones((TRUE_ROWS, BOARD_COLUMNS), dtype=np.int8)
+        blockades = np.sum(board & (np.cumsum(board, axis=0) < grid_of_1s.cumsum(axis=0)))  
+        return blockades
+
+    def get_bumpiness(self,heights):
+        bumpiness = sum(abs(heights[i] - heights[i+1]) for i in range(len(heights)-1))
+        return bumpiness
+
+    def get_overhangs(self,board):
+        overhangs = 0
+        for y in range(BOARD_ROWS - 1):
+            for x in range(BOARD_COLUMNS):
+                if board[y,x] == 1:
+                    if board[y+1,x] == 0:
+                        left_open = (x > 0 and board[y+1, x-1] == 0)
+                        right_open = (x < BOARD_COLUMNS-1 and board[y+1, x+1] == 0)
+                        if left_open or right_open:
+                            overhangs += 1
+        return overhangs
+
+    def get_middle_tower_difference(self,heights):
+        middle_height = np.median(heights[3:7])
+        edgeL_height = np.median(heights[0:3])
+        edgeR_height = np.median(heights[7:10])
+        return (middle_height - edgeL_height) + ((middle_height - edgeR_height))
+
+    def get_heuristics(self):
+        board = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8)
+        heights = self.get_heights(board)
+        max_height = np.max(heights)
+        holes = self.get_holes(board)
+        bumpiness = self.get_bumpiness(heights)
+        blockades = self.get_blockades(board)
+        overhangs = self.get_overhangs(board)
+        well_position = np.argmin(heights)
+        middle_difference = self.get_middle_tower_difference(heights)
+
+
+        t_spin = self.game.T_Spin
+        wasted_t = int(self.game.state.piece.name == 2 and t_spin == 0)
+        pc = int(self.game.PC)
+        tetris = int(self.game.Tetris)
+        combo = self.game.Combo
+        b2b = self.game.B2B
+
+        return np.concatenate([
+        heights,
+        np.array([max_height], dtype=np.int32),
+        np.array([holes], dtype=np.int32),
+        np.array([bumpiness], dtype=np.int32),
+        np.array([blockades], dtype=np.int32),
+        np.array([overhangs], dtype=np.int32),
+        np.array([well_position], dtype=np.int32),
+        np.array([middle_difference], dtype=np.int32),
+        np.array([t_spin, wasted_t, pc, tetris, combo, b2b], dtype=np.int32)
+    ], dtype=np.int32)
+
+
     def _get_obs(self):
         grid = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8).flatten()
         current_piece = np.array([self.game.state.piece.name])
@@ -37,7 +106,14 @@ class TetrisEnv(gym.Env):
         placements_vec = np.zeros((50*3))
         for i, (px,py,prot) in enumerate(placements[:50]):
             placements_vec[i*3:(i*3)+3] = [px,py,prot]
-        return np.concatenate([grid,current_piece,queue,hold_piece, placements_vec])
+        heuristics = self.get_heuristics()
+        return np.concatenate([
+            grid,
+            current_piece,
+            queue,hold_piece, 
+            placements_vec,
+            heuristics,
+             ])
     
     def _get_info(self):
         return {"score":0}
@@ -59,9 +135,23 @@ class TetrisEnv(gym.Env):
         return obs, info
 
     def step(self, action):
+        board = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8)
+        heights = self.get_heights(board)
+        holes = self.get_holes(board)
+        bumpiness = self.get_bumpiness(heights)
+        blockades = self.get_blockades(board)
+        overhangs = self.get_overhangs(board)
+        middle_diff = self.get_middle_tower_difference(heights)
         reward = 0
 
+        reward -= holes * 2 / 400
+        reward -= bumpiness / 360
+        reward -= blockades * 2 / 400
+        reward -= overhangs  / 400
+        reward -= middle_diff * 1.5 / 40
+
         lines_cleared, t_spin_type, pc = 0, 0, False
+        piece = self.game.state.piece.name
 
         placements = bfs_positions(self.game.state)
         if placements:
@@ -89,6 +179,8 @@ class TetrisEnv(gym.Env):
             reward += 6
         elif t_spin_type == 1:
             reward += 1
+        elif piece == 2 and t_spin_type == 0:
+            reward -= 1
 
         if pc:
             reward += 20

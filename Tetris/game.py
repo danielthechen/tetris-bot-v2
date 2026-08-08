@@ -22,6 +22,11 @@ class Tetris_Game:
         self.right_press_time = 0
         self.state = self.get_initial_state()
         self.view = GameView()
+        self.T_Spin = 0
+        self.Tetris = False
+        self.PC = False
+        self.B2B = 0
+        self.Combo = 0
 
     def refill(self):
             self.bag = [1,2,3,4,5,6,7]
@@ -111,13 +116,28 @@ class Tetris_Game:
         state = self.state
         state.grid.place_piece(state.piece)
         
-        t_spin = self.is_t_spin(state.piece)
+        self.T_Spin = self.is_t_spin(state.piece)
 
         self.lines_cleared = state.grid.clear_lines()
 
-        pc = self.is_perfect_clear(state.grid.matrix)
+        self.PC = self.is_perfect_clear(state.grid.matrix)
+
+        if self.lines_cleared == 4:
+            self.Tetris = True
+        else:
+            self.Tetris = False
+
+        if self.T_Spin != 0 or self.Tetris == True:
+            self.B2B += 1
+        else:
+            self.B2B = 0
     
         #credit: https://tetrio.wiki.gg/wiki/Spins#O-Spin
+
+        if self.lines_cleared > 0:
+            self.Combo += 1
+        else:
+            self.Combo = 0
 
         if text:
             if self.lines_cleared == 4:
@@ -131,14 +151,14 @@ class Tetris_Game:
             else:
                 print_line = ""
 
-            if t_spin == 2:
+            if self.T_Spin == 2:
                 print("T SPIN", print_line)
-            elif t_spin == 1:
+            elif self.T_Spin == 1:
                 print("T SPIN MINI", print_line)
             elif print_line:
                 print(print_line)
 
-            if pc:
+            if self.PC:
                 print("PERFECT CLEAR")
 
         new_piece = Piece(state.next_shape_ids.pop(0))
@@ -169,7 +189,7 @@ class Tetris_Game:
         state.lock_timer = 0
         state.lock_resets = 0
 
-        return self.lines_cleared, t_spin, pc
+        return self.lines_cleared, self.T_Spin, self.PC
 
     def soft_drop(self):
         self.state.gravity.reset_progress()

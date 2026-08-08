@@ -17,13 +17,13 @@ Training:
     - develop actual reward function 
     - actually develop the training model
     - heuristic function:
+        - Height (middle, top) 
         - holes
         - bumpiness
-        - Height (middle, top)
         - blockades
         - overhangs
         - towers in the middle (towers to right or left can be good for spiking)
-        - T spin opportunity
+        - T spin
         - wasted T
         - PC
         - TETRIS

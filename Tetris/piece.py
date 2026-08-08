@@ -4,7 +4,7 @@ from tetronimoes import shapes
 
 class Piece:
     def __init__(self, name):
-        self.name = name
+        self.name = name         #OTSZJLI
         self.shape = shapes[name]
         self.x = 3
         #Jstris: -1, Tetrio: -2, Normal: 0
