@@ -1,6 +1,5 @@
 import gymnasium as gym
 from stable_baselines3 import PPO
-from stable_baselines3.common.results_plotter import load_results, ts2xy
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
 from tetris_Env import TetrisEnv
