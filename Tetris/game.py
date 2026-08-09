@@ -1,6 +1,6 @@
 import numpy as np
 import pygame
-#from rotation_masks import ROTATIONS
+from rotation_masks import ROTATIONS
 from game_view import GameView
 from game_state import Gamestate
 from config import BOARD_COLUMNS, BOARD_ROWS, lock_delay, max_lock_reset, DAS, ARR, SEED
@@ -169,7 +169,7 @@ class Tetris_Game:
             state.next_shape_ids.append(self.get_random_shape_id())
             state.turn_held = False
 
-            # FIXME BFS RENDER
+            # # FIXME BFS RENDER
             # placements = bfs_positions(self.state)
             # # print(len(placements))
             # for (px, py, prot) in placements:
@@ -179,7 +179,7 @@ class Tetris_Game:
             #     temp_piece.shape = ROTATIONS[state.piece.name][prot]
             #     self.state.piece = temp_piece
             #     self.view.render(self.state)
-            #     pygame.time.wait(50)
+            #     pygame.time.wait(25)
             # state.piece = new_piece
                     
         else:

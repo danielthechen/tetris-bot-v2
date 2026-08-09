@@ -66,7 +66,8 @@ class TetrisEnv(gym.Env):
         return (middle_height - edgeL_height) + ((middle_height - edgeR_height))
 
     def get_heuristics(self):
-        board = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8)
+        temp_board = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8)
+        board = np.flipud(temp_board)
         heights = self.get_heights(board)
         max_height = np.max(heights)
         holes = self.get_holes(board)
@@ -76,13 +77,21 @@ class TetrisEnv(gym.Env):
         well_position = np.argmin(heights)
         middle_difference = self.get_middle_tower_difference(heights)
 
-
         t_spin = self.game.T_Spin
         wasted_t = int(self.game.state.piece.name == 2 and t_spin == 0)
         pc = int(self.game.PC)
         tetris = int(self.game.Tetris)
         combo = self.game.Combo
         b2b = self.game.B2B
+
+        if self.render_mode == "human":
+            print(temp_board[20:])
+            print(f"holes: {holes}")
+            print(f"bumpiness: {bumpiness}")
+            print(f"blockades: {blockades}")
+            print(f"overhangs: {overhangs}")
+            print(f"well_position: {well_position}")
+            print(f"middle_difference: {middle_difference}")
 
         return np.concatenate([
         heights,
@@ -107,6 +116,7 @@ class TetrisEnv(gym.Env):
         for i, (px,py,prot) in enumerate(placements[:50]):
             placements_vec[i*3:(i*3)+3] = [px,py,prot]
         heuristics = self.get_heuristics()
+
         return np.concatenate([
             grid,
             current_piece,
@@ -130,25 +140,25 @@ class TetrisEnv(gym.Env):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.close()
-            pygame.time.wait(50) 
+            pygame.time.wait(5000) 
 
         return obs, info
 
     def step(self, action):
-        board = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8)
+        board = np.flipud((np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8))
         heights = self.get_heights(board)
         holes = self.get_holes(board)
         bumpiness = self.get_bumpiness(heights)
         blockades = self.get_blockades(board)
         overhangs = self.get_overhangs(board)
-        middle_diff = self.get_middle_tower_difference(heights)
+        #middle_diff = self.get_middle_tower_difference(heights)
         reward = 0
 
-        reward -= holes * 2 / 400
-        reward -= bumpiness / 360
-        reward -= blockades * 2 / 400
-        reward -= overhangs  / 400
-        reward -= middle_diff * 1.5 / 40
+        reward -= holes
+        reward -= bumpiness * 0.5
+        reward -= blockades * 0.5
+        reward -= overhangs  *0.1
+        #reward -= middle_diff * 1.5 / 40
 
         lines_cleared, t_spin_type, pc = 0, 0, False
         piece = self.game.state.piece.name
@@ -167,39 +177,40 @@ class TetrisEnv(gym.Env):
                 print("hi")
 
         if lines_cleared == 1:
-            reward += 1
-        elif lines_cleared == 2:
-            reward += 2
-        elif lines_cleared == 3:
             reward += 5
-        elif lines_cleared == 4:
+        elif lines_cleared == 2:
             reward += 10
+        elif lines_cleared == 3:
+            reward += 15
+        elif lines_cleared == 4:
+            reward += 30
 
         if t_spin_type == 2:
-            reward += 6
+            reward += 35
         elif t_spin_type == 1:
-            reward += 1
+            reward += 6
         elif piece == 2 and t_spin_type == 0:
             reward -= 1
 
         if pc:
-            reward += 20
+            reward += 40
 
         if self.game.state.game_over:
-            reward -= 50
+            reward -= 150
         else:
-            reward += 0.1
+            reward += 2
 
         terminated = self.game.state.game_over
         observation = self._get_obs()
         info = self._get_info()
 
         if self.render_mode == "human":
+            print(f"REWARD = {reward}")
             self.game.view.render(self.game.state)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.close()
-            pygame.time.wait(50) 
+            pygame.time.wait(5000) 
 
         return observation, reward, terminated, False, info
 

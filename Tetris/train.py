@@ -10,9 +10,6 @@ import numpy as np
 import torch
 
 
-
-#4M steps
-
 def make_env():
     def _init():
         env = TetrisEnv(render_mode= None)
@@ -34,41 +31,40 @@ if __name__ == "__main__":
     name_prefix="tetris_agent"
 )
 
-    eval_env = DummyVecEnv([make_env()])
-    eval_env = VecNormalize.load("Tetris_Env_V0.1.pkl", eval_env)
-    eval_env.training = False
-    eval_env.norm_reward = False
+#     eval_env = DummyVecEnv([make_env()])
+#     eval_env = VecNormalize.load("Tetris_Env_V0.2.pkl", eval_env)
+#     eval_env.training = False
+#     eval_env.norm_reward = False
 
-    eval_callback = EvalCallback(
-    eval_env,
-    best_model_save_path="./models/best_model/",
-    log_path="./logs/",
-    eval_freq=62_500,
-    deterministic=True,
-    render=False
-)
+#     eval_callback = EvalCallback(
+#     eval_env,
+#     best_model_save_path="./models/best_model/",
+#     log_path="./logs/",
+#     eval_freq=62_500,
+#     deterministic=True,
+#     render=False
+# )
 
     env = SubprocVecEnv([make_env() for _ in range(16)])
 
-    # env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs = 10)
-
-    # model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps= 4096, batch_size= 2048, learning_rate=1e-4, device='cpu')
-    # model.learn(total_timesteps=10000)
-    # model.save("ppo_heuristic_tetris")
-    # env.save("Tetris_Env_V0.1.pkl")
-    # env.close()
-
-    env = VecNormalize.load("Tetris_Env_V0.1.pkl", env)
-    model = MaskablePPO.load("ppo_heuristic_tetris", env=env, device='mps')
-    print("good")
-    model.learn(total_timesteps=8_000_000, callback=[checkpoint_callback, eval_callback])
-    model.save("ppo_heuristic_tetris")
-    env.save("Tetris_Env_V0.1.pkl")
+    env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs = 10)
+    model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps= 4096, batch_size= 2048, learning_rate=1e-4, device='cpu')
+    model.learn(total_timesteps=10000)
+    model.save("ppo_tetris_v1.5.zip")
+    env.save("Tetris_Env_V0.2.pkl")
     env.close()
 
+    # env = VecNormalize.load("Tetris_Env_V0.2.pkl", env)
+    # model = MaskablePPO.load("ppo_tetris_v1.5.zip", env=env, device='mps')
+    # print("good")
+    # model.learn(total_timesteps=8_000_000, callback=[checkpoint_callback, eval_callback])
+    # model.save("ppo_tetris_v1.5.zip")
+    # env.save("Tetris_Env_V0.2.pkl")
+    # env.close()
+
     # eval_env = DummyVecEnv([make_env()])
-    # eval_env = eval_env = VecNormalize.load("Tetris_Env_V0.1.pkl", eval_env)
-    # model = MaskablePPO.load("ppo_heuristic_tetris", env=eval_env)
+    # eval_env = eval_env = VecNormalize.load("Tetris_Env_V0.2.pkl", eval_env)
+    # model = MaskablePPO.load("./models/tetris_agent_1000000_steps.zip", env=eval_env)
     # obs = eval_env.reset()
     # for _ in range(2000):
     #     action, _states = model.predict(obs, action_masks=mask_fn(eval_env.envs[0].env), deterministic=True)
