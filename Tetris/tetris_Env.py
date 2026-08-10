@@ -20,6 +20,15 @@ class TetrisEnv(gym.Env):
                 high=7,
                 shape = (40*10 + 1 + 5 + 1 + 50*3 + 23, ),
         )
+        self.history={
+        "holes": 0,
+        "bumpiness": 0,
+        "blockades": 0,
+        "overhangs": 0,
+        "well_height": 0,
+        "middle_diff": 0,
+        "max_height" : 0
+        }
 
         #variable action-space
         self.action_space = spaces.Discrete(50)
@@ -49,20 +58,20 @@ class TetrisEnv(gym.Env):
 
     def get_overhangs(self,board):
         overhangs = 0
-        for y in range(BOARD_ROWS - 1):
+        for y in range(1,BOARD_ROWS+1):
             for x in range(BOARD_COLUMNS):
                 if board[y,x] == 1:
-                    if board[y+1,x] == 0:
-                        left_open = (x > 0 and board[y+1, x-1] == 0)
-                        right_open = (x < BOARD_COLUMNS-1 and board[y+1, x+1] == 0)
+                    if board[y-1,x] == 0:
+                        left_open = (x > 0 and board[y-1, x-1] == 0)
+                        right_open = (x < BOARD_COLUMNS-1 and board[y-1, x+1] == 0)
                         if left_open or right_open:
                             overhangs += 1
         return overhangs
 
     def get_middle_tower_difference(self,heights):
-        middle_height = np.median(heights[3:7])
-        edgeL_height = np.median(heights[0:3])
-        edgeR_height = np.median(heights[7:10])
+        middle_height = np.mean(heights[3:7])
+        edgeL_height = np.mean(heights[0:3])
+        edgeR_height = np.mean(heights[7:10])
         return (middle_height - edgeL_height) + ((middle_height - edgeR_height))
 
     def get_heuristics(self):
@@ -91,6 +100,7 @@ class TetrisEnv(gym.Env):
             print(f"blockades: {blockades}")
             print(f"overhangs: {overhangs}")
             print(f"well_position: {well_position}")
+            print(f"max_height: {max_height}")
             print(f"middle_difference: {middle_difference}")
 
         return np.concatenate([
@@ -132,6 +142,16 @@ class TetrisEnv(gym.Env):
         super().reset(seed=seed)
         self.game.state = self.game.get_initial_state()
         self.game.bag = []
+        self.history={
+        "holes": 0,
+        "bumpiness": 0,
+        "blockades": 0,
+        "overhangs": 0,
+        "well_height": 0,
+        "middle_diff": 0,
+        "max_height": 0,
+        }
+        
         obs = self._get_obs()
         info = self._get_info()
 
@@ -140,29 +160,12 @@ class TetrisEnv(gym.Env):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.close()
-            pygame.time.wait(5000) 
+            pygame.time.wait(50) 
 
         return obs, info
 
     def step(self, action):
-        board = np.flipud((np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8))
-        heights = self.get_heights(board)
-        holes = self.get_holes(board)
-        bumpiness = self.get_bumpiness(heights)
-        blockades = self.get_blockades(board)
-        overhangs = self.get_overhangs(board)
-        #middle_diff = self.get_middle_tower_difference(heights)
-        reward = 0
-
-        reward -= holes
-        reward -= bumpiness * 0.5
-        reward -= blockades * 0.5
-        reward -= overhangs  *0.1
-        #reward -= middle_diff * 1.5 / 40
-
         lines_cleared, t_spin_type, pc = 0, 0, False
-        piece = self.game.state.piece.name
-
         placements = bfs_positions(self.game.state)
         if placements:
             if action < len(placements):
@@ -176,41 +179,93 @@ class TetrisEnv(gym.Env):
                 self.game.state.game_over = True
                 print("hi")
 
-        if lines_cleared == 1:
-            reward += 5
-        elif lines_cleared == 2:
-            reward += 10
-        elif lines_cleared == 3:
-            reward += 15
-        elif lines_cleared == 4:
-            reward += 30
+        board = np.flipud((np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8))
+        heights = self.get_heights(board)
+        holes = self.get_holes(board)
+        bumpiness = self.get_bumpiness(heights)
+        blockades = self.get_blockades(board)
+        overhangs = self.get_overhangs(board)
+        well_position = np.argmin(heights)
+        well_height = heights[well_position]
+        max_height = np.max(heights)
+        middle_diff = self.get_middle_tower_difference(heights)
 
-        if t_spin_type == 2:
-            reward += 35
+        heuristics = {
+        "holes": holes,
+        "bumpiness": bumpiness,
+        "blockades": blockades,
+        "overhangs": overhangs,
+        "well_height": well_height,
+        "middle_diff": middle_diff,
+        "max_height" : max_height
+        }
+
+        reward = 0
+        reward += (TRUE_ROWS - well_height) * 0.025
+        reward -= np.mean(heights) * 0.05
+        reward -= max_height * 0.1
+        reward -= holes * 0.2
+        reward -= bumpiness * 0.1
+        reward -= blockades * 0.05
+        reward -= overhangs * 0.01
+        # reward -= middle_diff * 0.05
+
+        reward -= (well_height - self.history["well_height"]) * 0.3
+        reward -= (max_height - self.history["max_height"]) * 0.2
+        reward -= (holes - self.history["holes"]) * 0.4
+        reward -= (bumpiness - self.history["bumpiness"]) * 0.4
+        reward -= (blockades - self.history["blockades"]) * 0.1
+        reward -= (overhangs - self.history["overhangs"]) * 0.05
+        # reward -= (middle_diff - self.history["middle_diff"]) * 0.1
+
+        piece = self.game.state.piece.name
+
+        if lines_cleared == 1:
+            reward += 50
+        elif lines_cleared == 2:
+            reward += 100
+        elif lines_cleared == 3:
+            reward += 200
+        elif lines_cleared == 4:
+            reward += 400
+
+        if t_spin_type == 2 and lines_cleared == 2:
+            reward += 350
+        elif t_spin_type == 2 and lines_cleared == 3:    
+            reward += 300
         elif t_spin_type == 1:
-            reward += 6
+            reward += 100
         elif piece == 2 and t_spin_type == 0:
             reward -= 1
 
         if pc:
-            reward += 40
+            reward += 150
 
         if self.game.state.game_over:
-            reward -= 150
+            reward -= 200
         else:
-            reward += 2
+            reward += 15
 
         terminated = self.game.state.game_over
         observation = self._get_obs()
         info = self._get_info()
 
         if self.render_mode == "human":
+            print(f"delta well_height: {well_height - self.history["well_height"]}")
+            print(f"delta max_height: {max_height - self.history["max_height"]}")
+            print(f"delta holes: {holes - self.history["holes"]}")
+            print(f"delta bumpiness: {(bumpiness - self.history["bumpiness"])}")
+            print(f"delta blockades: {blockades - self.history["blockades"]}")
+            print(f"delta overhangs: {overhangs - self.history["overhangs"]}")
+            print(f"delta middle_diff: {middle_diff - self.history["middle_diff"]}")
             print(f"REWARD = {reward}")
             self.game.view.render(self.game.state)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.close()
-            pygame.time.wait(5000) 
+            pygame.time.wait(50) 
+
+        self.history = heuristics
 
         return observation, reward, terminated, False, info
 

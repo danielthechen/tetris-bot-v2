@@ -10,7 +10,7 @@ alpha_overlay = 200
 lock_delay = 30 #frames, in 60fps so 0.5 ms, this is changed for the RL
 max_lock_reset = 15
 
-SEED = 10
+SEED = np.random.default_rng().integers(1,1001)
 
 #Frames
 DAS = 5.5
