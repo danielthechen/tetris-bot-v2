@@ -27,7 +27,8 @@ class TetrisEnv(gym.Env):
         "overhangs": 0,
         "well_height": 0,
         "middle_diff": 0,
-        "max_height" : 0
+        "max_height" : 0,
+        "well_position": 0
         }
 
         #variable action-space
@@ -150,6 +151,7 @@ class TetrisEnv(gym.Env):
         "well_height": 0,
         "middle_diff": 0,
         "max_height": 0,
+        "well_position": 0,
         }
         
         obs = self._get_obs()
@@ -197,23 +199,29 @@ class TetrisEnv(gym.Env):
         "overhangs": overhangs,
         "well_height": well_height,
         "middle_diff": middle_diff,
-        "max_height" : max_height
+        "max_height" : max_height,
+        "well_position": well_position,
         }
 
         reward = 0
-        reward += (TRUE_ROWS - well_height) * 0.025
+        reward += (TRUE_ROWS - well_height) * 0.1
         reward -= np.mean(heights) * 0.05
         reward -= max_height * 0.1
-        reward -= holes * 0.2
-        reward -= bumpiness * 0.1
+        reward -= holes * 0.4
+        reward -= bumpiness * 0.5
         reward -= blockades * 0.05
         reward -= overhangs * 0.01
         # reward -= middle_diff * 0.05
 
+        if well_position == self.history["well_position"]:
+            reward += 5
+        else:
+            reward -= 5
+
         reward -= (well_height - self.history["well_height"]) * 0.3
         reward -= (max_height - self.history["max_height"]) * 0.2
-        reward -= (holes - self.history["holes"]) * 0.4
-        reward -= (bumpiness - self.history["bumpiness"]) * 0.4
+        reward -= (holes - self.history["holes"]) * 0.5
+        reward -= (bumpiness - self.history["bumpiness"]) * 0.6
         reward -= (blockades - self.history["blockades"]) * 0.1
         reward -= (overhangs - self.history["overhangs"]) * 0.05
         # reward -= (middle_diff - self.history["middle_diff"]) * 0.1
@@ -221,7 +229,7 @@ class TetrisEnv(gym.Env):
         piece = self.game.state.piece.name
 
         if lines_cleared == 1:
-            reward += 50
+            reward += 30
         elif lines_cleared == 2:
             reward += 100
         elif lines_cleared == 3:
@@ -244,7 +252,7 @@ class TetrisEnv(gym.Env):
         if self.game.state.game_over:
             reward -= 200
         else:
-            reward += 15
+            reward += 7
 
         terminated = self.game.state.game_over
         observation = self._get_obs()

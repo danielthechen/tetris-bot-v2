@@ -31,7 +31,7 @@ if __name__ == "__main__":
     checkpoint_callback = CheckpointCallback(
     save_freq=31_250,
     save_path="./models/",
-    name_prefix="tetris_bot"
+    name_prefix="tetris_bot_v2.5"
 )
 
     eval_env = DummyVecEnv([make_env()])
@@ -58,10 +58,10 @@ if __name__ == "__main__":
     # env.close()
 
     env = VecNormalize.load("Tetris_Env_V0.5.pkl", env)
-    model = MaskablePPO.load("./models/tetris_agent_500000_steps.zip", env=env, device='mps')
+    model = MaskablePPO.load("ppo_tetris_v2.zip", env=env, device='mps')
     print("Learning!!!")
     model.learn(total_timesteps=8_000_000, callback=[checkpoint_callback, eval_callback])
-    model.save("ppo_tetris_v2.zip")
+    model.save("ppo_tetris_v2.5.zip")
     env.save("Tetris_Env_V0.5.pkl")
     env.close()
 
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     # eval_env = DummyVecEnv([make_env()])
     # eval_env = eval_env = VecNormalize.load("Tetris_Env_V0.5.pkl", eval_env)
-    # model = MaskablePPO.load("./models/tetris_agent_500000_steps.zip", env=eval_env)
+    # model = MaskablePPO.load("ppo_tetris_v2.zip", env=eval_env)
     # obs = eval_env.reset()
     # for _ in range(2000):
     #     action, _states = model.predict(obs, action_masks=mask_fn(eval_env.envs[0].env), deterministic=True)
