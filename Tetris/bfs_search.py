@@ -33,18 +33,21 @@ def bfs_positions(state):
                 valid = state.grid.can_fit_shape(nshape, nx, ny)
 
             elif action in ["cw", "ccw", "rot180"]:
+                # if state.piece.name == 1:
+                #     continue
                 idx = 1 if action == "cw" else -1 if action == "ccw" else 2
                 nrot = (rot - idx) % 4
                 new_shape = ROTATIONS[state.piece.name][nrot]
-                if idx != 2:
+                if idx != 2 and state.piece.name != 1:
                     if state.piece.name == 7:
                         offsets = KICK_DIFFS['I'][rot][nrot]
-                    elif state.piece.name == 1:
-                        offsets = KICK_DIFFS['O'][rot][nrot]
                     else:
                         offsets = KICK_DIFFS['JLTSZ'][rot][nrot]
                 else:
-                    offsets = KICK_DIFFS['180'][rot]
+                    if state.piece.name == 1:
+                        offsets = KICK_DIFFS['O'][rot][nrot]
+                    else:
+                        offsets = KICK_DIFFS['180'][rot]
 
                 for dx, dy in offsets:
                     nx, ny = x + dx, y + dy
