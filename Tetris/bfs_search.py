@@ -1,5 +1,5 @@
 from collections import deque
-from rotation_masks import ROTATIONS
+from rotation_masks import ROTATIONS, ROTATION_OFFSETS
 from bfs_kicks import KICK_DIFFS
 
 def bfs_positions(state):
@@ -13,31 +13,37 @@ def bfs_positions(state):
             continue
         visited.add((x, y, rot)) 
 
-        shape = ROTATIONS[state.piece.name][rot]
-        if not state.grid.can_fit_shape(shape, x, y+1):
+        shape_offsets = ROTATION_OFFSETS[state.piece.name][rot]
+        if not state.grid.can_fit_shape_offsets(shape_offsets, x, y+1):
             legal_positions.append((x, y, rot))
 
-        for action in ["left", "right", "down", "cw", "ccw", "rot180"]:
+        for action in [1, #left
+                       2,  #right
+                       3,  # down
+                       4,  #cw
+                       5,  #ccw
+                       6 #rot180
+                       ]:
             nx, ny, nrot = x, y, rot
-            nshape = shape
+            noffsets = shape_offsets
             valid = False
 
-            if action == "left":
+            if action == 1:
                 nx -= 1
-                valid = state.grid.can_fit_shape(nshape, nx, ny)
-            elif action == "right":
+                valid = state.grid.can_fit_shape_offsets(noffsets, nx, ny)
+            elif action == 2:
                 nx += 1
-                valid = state.grid.can_fit_shape(nshape, nx, ny)
-            elif action == "down":
+                valid = state.grid.can_fit_shape_offsets(noffsets, nx, ny)
+            elif action == 3:
                 ny += 1
-                valid = state.grid.can_fit_shape(nshape, nx, ny)
+                valid = state.grid.can_fit_shape_offsets(noffsets, nx, ny)
 
-            elif action in ["cw", "ccw", "rot180"]:
+            elif action in [4, 5, 6]:
                 # if state.piece.name == 1:
                 #     continue
-                idx = 1 if action == "cw" else -1 if action == "ccw" else 2
+                idx = 1 if action == 4 else -1 if action == 5 else 2
                 nrot = (rot - idx) % 4
-                new_shape = ROTATIONS[state.piece.name][nrot]
+                new_offsets = ROTATION_OFFSETS[state.piece.name][nrot]
                 if idx != 2 and state.piece.name != 1:
                     if state.piece.name == 7:
                         offsets = KICK_DIFFS['I'][rot][nrot]
@@ -51,9 +57,9 @@ def bfs_positions(state):
 
                 for dx, dy in offsets:
                     nx, ny = x + dx, y + dy
-                    success = state.grid.can_fit_shape(new_shape, x + dx, y + dy)
+                    success = state.grid.can_fit_shape_offsets(new_offsets, x + dx, y + dy)
                     if success:
-                        nshape = new_shape
+                        noffsets = new_offsets
                         valid = True
                         break
 

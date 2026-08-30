@@ -1,13 +1,36 @@
 import gymnasium as gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
+from stable_baselines3.common.utils import FloatSchedule
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
+from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 from tetris_Env import TetrisEnv
 from bfs_search import bfs_positions
 from sb3_contrib.common.wrappers import ActionMasker
 from sb3_contrib import MaskablePPO
 import numpy as np
+
+class HoleLoggingCallback(BaseCallback):
+    def __init__(self, log_freq=100, verbose=0):
+        super().__init__(verbose)
+        self.log_freq = log_freq
+        self.episode_holes = []
+        self.episode_blockades = []
+
+    def _on_step(self) -> bool:
+        for info in self.locals["infos"]:
+            if "episode" in info:  # Monitor injects this on the terminal step
+                self.episode_holes.append(info["blocked_holes"])
+                self.episode_blockades.append(info["blockades"])
+
+        if len(self.episode_holes) >= self.log_freq:
+            self.logger.record("custom/blocked_holes_mean", np.mean(self.episode_holes))
+            self.logger.record("custom/blocked_holes_max", np.max(self.episode_holes))
+            self.logger.record("custom/blockades_mean", np.mean(self.episode_blockades))
+            self.episode_holes = []
+            self.episode_blockades = []
+
+        return True
 
 def make_env():
     def _init():
@@ -21,9 +44,10 @@ def mask_fn(env):
     base_env = getattr(env, "env", env)
     base_env = getattr(base_env, "unwrapped", base_env)
 
-    placements = bfs_positions(base_env.game.state)
+    placements = base_env.cached_placements
     mask = np.zeros(base_env.action_space.n, dtype=bool)
-    mask[:len(placements)] = True
+    mask [0] = not base_env.game.state.turn_held
+    mask[1:len(placements)+1] = True
     return mask
 
 if __name__ == "__main__":
@@ -31,38 +55,32 @@ if __name__ == "__main__":
     checkpoint_callback = CheckpointCallback(
     save_freq=31_250,
     save_path="./models/",
-    name_prefix="tetris_bot_v2.5"
-)
-
-    eval_env = DummyVecEnv([make_env()])
-    eval_env = VecNormalize.load("Tetris_Env_V0.5.pkl", eval_env)
-    eval_env.training = False
-    eval_env.norm_reward = False
-
-    eval_callback = EvalCallback(
-    eval_env,
-    best_model_save_path="./models/best_model/",
-    log_path="./logs/",
-    eval_freq=31_250,
-    deterministic=True,
-    render=False
+    name_prefix="tetris_bot_v27.2"
 )
 
     env = SubprocVecEnv([make_env() for _ in range(16)])
 
     # env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs = 10)
-    # model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps= 512, batch_size= 1024, ent_coef=0.01,learning_rate=1e-4, device='mps', tensorboard_log="./runs/tetris_project")
+    # model = MaskablePPO("MlpPolicy", env, verbose=1, n_steps= 512, batch_size= 1024, ent_coef=0.03,learning_rate=1e-4, device='mps', tensorboard_log="./runs/tetris_project")
     # model.learn(total_timesteps=10000)
-    # model.save("ppo_tetris_v2.zip")
-    # env.save("Tetris_Env_V0.5.pkl")
+    # model.save("ppo_tetris_new_v1.zip")
+    # env.save("Tetris_Env_new_v1.pkl")
     # env.close()
 
-    env = VecNormalize.load("Tetris_Env_V0.5.pkl", env)
-    model = MaskablePPO.load("ppo_tetris_v2.zip", env=env, device='mps')
+    env = VecNormalize.load("Tetris_Env_v21.pkl", env)
+    #model = MaskablePPO.load("ppo_tetris_v26.zip", env=env, device='mps', tensorboard_log="./runs/tetris_project")
+    model = MaskablePPO.load("./models/tetris_bot_v27.1_4500000_steps.zip", env=env, device='mps', tensorboard_log = "./runs/tetris_project")
+    # model.learning_rate = FloatSchedule(5e-5)
+    # model.lr_schedule = FloatSchedule(5e-5)
+    # model.clip_range = FloatSchedule(0.15)
+    # model.target_kl = 0.03
+    # model.ent_coef = 0.01
+    # model.vf_coef = 1.0
+    print(model.lr_schedule(1.0))
     print("Learning!!!")
-    model.learn(total_timesteps=8_000_000, callback=[checkpoint_callback, eval_callback])
-    model.save("ppo_tetris_v2.5.zip")
-    env.save("Tetris_Env_V0.5.pkl")
+    model.learn(total_timesteps=6_000_000, callback=[checkpoint_callback, HoleLoggingCallback()])
+    model.save("ppo_tetris_v27.zip")
+    env.save("Tetris_Env_v22.pkl")
     env.close()
 
     # ./models/tetris_agent_1000000_steps

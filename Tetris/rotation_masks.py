@@ -195,3 +195,11 @@ ROTATIONS = {
     ],
 }
 
+
+ROTATION_OFFSETS = {
+    piece: [
+        [(int(j), int(i)) for i, row in enumerate(shape) for j, filled in enumerate(row) if filled]
+        for shape in rotations
+    ]
+    for piece, rotations in ROTATIONS.items()
+}

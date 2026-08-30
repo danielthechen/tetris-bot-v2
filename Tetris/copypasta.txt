@@ -1,0 +1,158 @@
+            place_height = state.piece.y
+            board = np.flipud((np.array(state.grid.matrix) != EMPTY_BLOCK).astype(np.int8))
+            board2 = board[:40, :]
+            
+            visited = np.zeros_like(board2, dtype=bool)
+            stack = []
+
+            for x in range(BOARD_COLUMNS):
+                col = board2[:, x]
+
+                filled_blocks = np.where(col == 1)[0]
+                highest = filled_blocks[-1] if len(filled_blocks) > 0 else -1
+                
+                for y in range(highest + 1, 40):
+                    if board2[y, x] == 0:
+                        stack.append((y, x))
+
+            while stack:
+                y, x = stack.pop()
+                if not (0 <= y < 40 and 0 <= x < BOARD_COLUMNS):
+                    continue
+                if visited[y, x] or board2[y, x] == 1:
+                    continue
+
+                visited[y, x] = True
+
+                stack.extend([
+                    (y+1, x),
+                    (y-1, x),
+                    (y, x+1),
+                    (y, x-1),
+                ])
+
+            blocked_holes = np.sum((board2 == 0) & (~visited))
+            range_1_40 = np.array(list(range(1,40  + 1)))
+            heights = np.array([int((column * range_1_40).max()) for column in board.T])
+            row_holes = ((board == 0) & (np.cumsum(board, axis=0) < np.sum(board, axis=0))).sum()
+            bumpiness = sum(abs(heights[i] - heights[i+1]) for i in range(len(heights)-1))
+            grid_of_1s = np.ones((40, BOARD_COLUMNS), dtype=np.int8)
+            blockades = np.sum(board & (np.cumsum(board, axis=0) < grid_of_1s.cumsum(axis=0))) 
+            overhangs = 0
+            for y in range(1,BOARD_ROWS+1):
+                for x in range(BOARD_COLUMNS):
+                    if board[y,x] == 1:
+                        if board[y-1,x] == 0:
+                            left_open = (x > 0 and board[y-1, x-1] == 0)
+                            right_open = (x < BOARD_COLUMNS-1 and board[y-1, x+1] == 0)
+                            if left_open or right_open:
+                                overhangs += 1
+            well_position = np.argmin(heights)
+            well_height = heights[well_position]
+            max_height = np.max(heights)
+            middle_height = np.mean(heights[3:7])
+            edgeL_height = np.mean(heights[0:3])
+            edgeR_height = np.mean(heights[7:10])
+            middle_diff = (middle_height - edgeL_height) + ((middle_height - edgeR_height))
+
+            heuristics = {
+            "blocked_holes": blocked_holes,
+            "row_holes": row_holes,
+            "bumpiness": bumpiness,
+            "blockades": blockades,
+            "overhangs": overhangs,
+            "well_height": well_height,
+            "middle_diff": middle_diff,
+            "max_height" : max_height,
+            "well_position": well_position,
+            }
+
+            reward = 0
+            reward += (40 - well_height)/10 * 0.01
+            reward -= np.mean(heights)/20 * 0.05
+            reward -= np.power(1.025,(40-place_height)) - 1
+            reward -= max_height/20 * 0.1
+            reward -= blocked_holes/20 * 0.5
+            reward -= row_holes/20 * 0.05
+            reward -= bumpiness/20 * 0.02
+            reward -= blockades/80 * 0.02
+            reward -= overhangs/10 * 0.01
+            reward -= middle_diff * 0.05
+
+            # if well_position == self.history["well_position"]:
+            #     reward += 0.1
+            # else:
+            #     reward -= 0.1
+
+            #punishment (prev 20;40):
+            reward -= (well_height - self.history["well_height"]) * 0.1
+            reward -= (max_height - self.history["max_height"]) * 0.1
+            reward -= max(0,((blocked_holes - self.history["blocked_holes"]) * 1))
+            reward -= max(0,(row_holes - self.history["row_holes"] * 0.1))
+            reward -= (bumpiness - self.history["bumpiness"]) * 0.05
+            reward -= max(0,((blockades - self.history["blockades"]) * 0.1))
+            reward -= (overhangs - self.history["overhangs"]) * 0.05
+            reward -= (middle_diff - self.history["middle_diff"]) * 0.03
+
+            #reward (prev 5):
+            reward -= min(0, (blocked_holes - self.history["blocked_holes"] * 2))
+            reward -= min(0, (row_holes - self.history["row_holes"] * 0.7))
+            reward -= min(0,(blockades - self.history["blockades"] * 0.5))
+
+            piece = state.piece.name
+
+            #(prev 100, 130)
+            if self.lines_cleared == 1:
+                reward += 3 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            elif self.lines_cleared == 2:
+                reward += 7 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            elif self.lines_cleared == 3:
+                reward += 10 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            elif self.lines_cleared == 4:
+                reward += 15 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+
+            if self.T_Spin == 2 and self.lines_cleared == 2:
+                reward += 10 # * np.sqrt(self.game.Combo + 1)
+            elif self.T_Spin == 2 and self.lines_cleared == 3:    
+                reward += 10 # * np.sqrt(self.game.Combo + 1)
+            elif self.T_Spin == 1:   
+                reward += 2 # * np.sqrt(self.game.Combo + 1)
+            elif piece == 2 and (self.T_Spin == 0 or self.lines_cleared == 0):
+                reward -= 0.1
+
+            if self.Combo != 0:
+                reward += self.Combo
+            
+            if self.B2B != 0:
+                reward += 3 * self.B2B
+
+            if self.PC:
+                reward += 100
+
+            #prev 15,12,9,5
+            if state.game_over:
+                reward -= 100
+            else:
+                reward += 2
+
+            self.reward = reward
+
+            print("")
+            print(f"blocked_holes: {blocked_holes}")
+            print(f"row_holes: {row_holes}")
+            print(f"bumpiness: {bumpiness}")
+            print(f"blockades: {blockades}")
+            print(f"overhangs: {overhangs}")
+            print(f"well_position: {well_position}")
+            print(f"max_height: {max_height}")
+            print(f"middle_difference: {middle_diff}")
+            print(f"delta well_height: {well_height - self.history["well_height"]}")
+            print(f"delta max_height: {max_height - self.history["max_height"]}")
+            print(f"delta blocked_holes: {blocked_holes - self.history["blocked_holes"]}")
+            print(f"delta row_holes: {row_holes - self.history["row_holes"]}")
+            print(f"delta bumpiness: {bumpiness - self.history["bumpiness"]}")
+            print(f"delta blockades: {blockades - self.history["blockades"]}")
+            print(f"delta overhangs: {overhangs - self.history["overhangs"]}")
+            print(f"delta middle_diff: {middle_diff - self.history["middle_diff"]}")
+            print(f"lines_cleared: = {self.lines_cleared}")
+            self.history = heuristics

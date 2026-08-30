@@ -12,17 +12,24 @@ class Grid:
             for j, filled in enumerate(row):
                 if not filled:
                     continue
-
                 board_x, board_y = x + j, y + i
-
                 if board_x < 0 or board_x >= BOARD_COLUMNS:
                     return False
-
                 if board_y < 0 or board_y >= TRUE_ROWS:
                     return False
-                
                 if self.matrix[board_y][board_x] != EMPTY_BLOCK:
                     return False
+        return True
+
+    def can_fit_shape_offsets(self, offsets, x, y):
+        for dx, dy in offsets:
+            board_x, board_y = x + dx, y + dy
+            if board_x < 0 or board_x >= BOARD_COLUMNS:
+                return False
+            if board_y < 0 or board_y >= TRUE_ROWS:
+                return False
+            if self.matrix[board_y][board_x] != EMPTY_BLOCK:
+                return False
         return True
     
     def place_piece(self, piece: Piece):

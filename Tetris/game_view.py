@@ -21,7 +21,7 @@ GAME_HEIGHT = BOARD_HEIGHT
 class GameView:
     def init_display(self):
         self.screen = pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
-        self.font = pygame.font.SysFont("Monaco", 32, bold=True)
+        self.font = pygame.font.SysFont("Monaco", 40, bold=True)
 
     def draw_block(self, color, x, y):
         self.screen.fill(color, (x, y, CELL_SIZE - 1, CELL_SIZE - 1))
@@ -49,10 +49,10 @@ class GameView:
 
 
         # score_surface = self.font.render("Score:", True, color_Font)
-        # self.screen.blit(score_surface, (QUEUE_CONTENT_X, CELL_SIZE * 5))
+        # self.screen.blit(score_surface, (HOLD_CONTENT_X, 160))
 
-        # score_surface = self.font.render(f"{score:06}", True, color_Font)
-        # self.screen.blit(score_surface, (QUEUE_CONTENT_X, CELL_SIZE * 6))
+        # score_surface = self.font.render(f"{5:06}", True, color_Font)
+        # self.screen.blit(score_surface, (HOLD_CONTENT_X, 200))
 
     def draw_game_over_screen(self):
         overlay = pygame.Surface((BOARD_WIDTH, BOARD_HEIGHT))
@@ -82,7 +82,7 @@ class GameView:
             HOLD_CONTENT_Y
             )
 
-    def render(self, state: Gamestate):
+    def render(self, state: Gamestate, reward = None):
         self.screen.fill(color_background)
 
         self.draw_grid(state.grid)
@@ -97,6 +97,11 @@ class GameView:
         )
 
         self.draw_sidebar(next_shape_ids=state.next_shape_ids)
+
+        if reward:
+            score_surface = self.font.render(f"{reward:+.2f}", True, color_Font)
+            self.screen.blit(score_surface, (HOLD_CONTENT_X, 600))
+        
 
         if state.game_over:
             self.draw_game_over_screen()

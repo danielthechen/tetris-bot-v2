@@ -27,6 +27,18 @@ class Tetris_Game:
         self.PC = False
         self.B2B = 0
         self.Combo = 0
+        self.reward = 0
+        # self.history={
+        #         "blocked_holes": 0,
+        #         "row_holes": 0,
+        #         "bumpiness": 0,
+        #         "blockades": 0,
+        #         "overhangs": 0,
+        #         "well_height": 0,
+        #         "middle_diff": 0,
+        #         "max_height" : 0,
+        #         "well_position": 0
+        #         }
 
     def refill(self):
             self.bag = [1,2,3,4,5,6,7]
@@ -98,7 +110,6 @@ class Tetris_Game:
         # else:
         #     offsets = KICKS_180[old_orientation]
 
-
         for kick_num, (dx, dy) in enumerate(offsets):
             if self.state.grid.can_fit_shape(new_shape, piece.x + dx, piece.y + dy):
                 piece.shape = new_shape
@@ -110,6 +121,7 @@ class Tetris_Game:
                     self.state.lock_timer = 0
                     self.state.lock_resets += 1
                 return (kick_num + 1)
+        
         return None
 
     def handle_piece_landing(self, text= True):
@@ -179,7 +191,7 @@ class Tetris_Game:
             #     temp_piece.shape = ROTATIONS[state.piece.name][prot]
             #     self.state.piece = temp_piece
             #     self.view.render(self.state)
-            #     pygame.time.wait(25)
+            #     pygame.time.wait(100)
             # state.piece = new_piece
                     
         else:
@@ -362,6 +374,6 @@ class Tetris_Game:
         
             #print(self.state.piece.x, self.state.piece.y, self.state.rotation_idx)
             #print(self.state.piece.kick)
-            self.view.render(self.state)
+            self.view.render(self.state, reward = self.reward)
 
         pygame.quit()
