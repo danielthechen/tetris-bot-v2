@@ -28,9 +28,9 @@ def mask_fn(env):
 
 if __name__ == "__main__":
     eval_env = DummyVecEnv([make_env()])
-    eval_env = eval_env = VecNormalize.load("Tetris_Env_v21.pkl", eval_env)
-    #model = MaskablePPO.load("ppo_tetris_v26.zip", env=eval_env)
-    model = MaskablePPO.load("./models/tetris_bot_v27.1_500000_steps.zip", env=eval_env)
+    eval_env = VecNormalize.load("Tetris_Env_expansion_v3.pkl", eval_env)
+    model = MaskablePPO.load("ppo_tetris_expansion_v3.zip", env=eval_env)
+    #model = MaskablePPO.load("./models/v2/tetris_bot_expansion_v3_30000000_steps.zip", env=eval_env)
     obs = eval_env.reset()
     for _ in range(2000):
         
