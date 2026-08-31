@@ -19,8 +19,8 @@ class TetrisEnv(gym.Env):
         
         self.observation_space = spaces.Box(
                 low=0,
-                high=7,
-                shape = (40*10 + 1 + 5 + 1 + 49*3 + 24, ),
+                high=400,
+                shape = (40*10 + 1*7 + 5*7 + 1*7 + 49*3 + 24, ),
         )
         self.history={
         "blocked_holes": 0,
@@ -33,11 +33,6 @@ class TetrisEnv(gym.Env):
         "max_height" : 0,
         "well_position": 0
         }
-
-        self.last_blocked_holes = 0
-        self.last_row_holes = 0
-        self.last_blockades = 0
-        self.last_bumpiness = 0
 
         #variable action-space
         self.action_space = spaces.Discrete(50)
@@ -162,11 +157,18 @@ class TetrisEnv(gym.Env):
         np.array([t_spin, wasted_t, pc, tetris, combo, b2b], dtype=np.int32)
     ], dtype=np.int32)
 
+    def one_hot_piece(self, piece_id, number = 7):
+        vec = np.zeros(number)
+        if piece_id is not None and 1<=piece_id<=7:
+            vec[piece_id - 1] = 1
+        return vec
+
     def _get_obs(self):
         grid = (np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8).flatten()
-        current_piece = np.array([self.game.state.piece.name])
-        queue = np.array([name for name in self.game.state.next_shape_ids])
-        hold_piece = np.array([self.game.state.hold_piece if self.game.state.hold_piece else 7])
+        current_oh = self.one_hot_piece(self.game.state.piece.name)
+        queue_oh = np.concatenate([self.one_hot_piece(name) for name in self.game.state.next_shape_ids])
+        hold_oh = self.one_hot_piece(self.game.state.hold_piece)
+
         placements = np.array(bfs_positions(self.game.state))
         placements_vec = np.zeros((49*3))
         for i, (px,py,prot) in enumerate(placements[:49]):
@@ -175,25 +177,26 @@ class TetrisEnv(gym.Env):
 
         return np.concatenate([
             grid,
-            current_piece,
-            queue,hold_piece, 
+            current_oh,
+            queue_oh,
+            hold_oh, 
             placements_vec,
             heuristics,
              ])
     
     def _get_info(self):
         return {"score":0,
-                "blocked_holes": getattr(self,"last_blocked_holes",0),
-                "row_holes": getattr(self,"last_row_holes",0),
-                "blockades": getattr(self,"last_blockades",0),
-                "bumpiness": getattr(self,"last_bumpiness",0),
                 "_is_cheese": getattr(self, "episode_is_cheese", False),
+                "holes_made": getattr(self, "holes_made", 0),
+                "ep_lines_cleared": getattr(self, "ep_lines_cleared", 0)
                 }
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         self.game.state = self.game.get_initial_state()
         self.episode_cheese = False
+        self.holes_made = 0 
+        self.ep_lines_cleared = 0 
 
         cheese_height = self.np_random.integers(5,15)
         hole_prob = self.np_random.uniform(0.1,0.3)
@@ -233,11 +236,6 @@ class TetrisEnv(gym.Env):
                 "max_height" : max_height,
                 "well_position": well_position,
         }
-
-        self.last_blocked_holes = blocked_holes
-        self.last_row_holes = row_holes
-        self.last_blockades = blockades
-        self.last_bumpiness = bumpiness
         
         obs = self._get_obs()
         info = self._get_info()
@@ -282,6 +280,8 @@ class TetrisEnv(gym.Env):
         well_height = heights[well_position]
         max_height = np.sum(heights) # meant to be mean #TODO
         middle_diff = self.get_middle_tower_difference(heights)
+        self.holes_made += (blocked_holes - self.history["blocked_holes"])
+        self.ep_lines_cleared += lines_cleared
 
         heuristics = {
         "blocked_holes": blocked_holes,
@@ -294,17 +294,13 @@ class TetrisEnv(gym.Env):
         "max_height" : max_height,
         "well_position": well_position,
         }
-        self.last_blocked_holes = blocked_holes
-        self.last_row_holes = row_holes
-        self.last_blockades = blockades
-        self.last_bumpiness = bumpiness
 
         reward = 0
         reward += (TRUE_ROWS - well_height)/10 * 0.01
         #reward -= np.sum(heights) * 0.005
-        reward += np.power((1 - min(place_height,20)/20),2)
+        reward += np.power((1 - min(place_height,20)/20),2) * 2
         reward -= max_height * 0.005    #/20 * 0.1
-        reward -= blocked_holes/13 * 0.2
+        reward -= blocked_holes/10 * 0.2
         reward -= row_holes/20 * 0.05
         reward -= bumpiness/20 * 0.02
         reward -= blockades/80 * 0.02
@@ -317,22 +313,22 @@ class TetrisEnv(gym.Env):
         #     reward -= 0.1
 
         #punishment (prev 20;40):
-        reward -= (well_height - self.history["well_height"]) * 0.1
-        reward -= (max_height - self.history["max_height"]) * 0.06
-        reward -= (bumpiness - self.history["bumpiness"]) * 0.02
+        reward -= (well_height - self.history["well_height"]) * 0.02
         reward -= max(0,(blockades - self.history["blockades"]) * 0.01)
         reward -= (overhangs - self.history["overhangs"]) * 0.01
         reward -= (middle_diff - self.history["middle_diff"]) * 0.02
 
         #reward (prev 5):
         reward -= max(-1.5, min(0, (blocked_holes - self.history["blocked_holes"]) * 0.3))
-        reward -= max(-0.5, min(0, (row_holes - self.history["row_holes"]) * 0.1))
+        reward -= max(-2, min(0, (row_holes - self.history["row_holes"]) * 0.4))
         reward -= max(-0.05, min(0,(blockades - self.history["blockades"]) * 0.01))
 
-        reward = max(reward, -2)
+        reward = max(reward, -3.5)
 
-        reward -= min(max(0,(row_holes - self.history["row_holes"]) * 2), 10)
-        reward -= min(max(0,(blocked_holes - self.history["blocked_holes"]) * 3), 9)
+        reward -= (bumpiness - self.history["bumpiness"]) * 0.05
+        reward -= (max_height - self.history["max_height"]) * 0.02
+        reward -= min(max(0,(blocked_holes - self.history["blocked_holes"])*3), 12)
+        reward -= min(max(0,(row_holes - self.history["row_holes"])), 3)
 
         piece = self.game.state.piece.name
 
@@ -340,11 +336,11 @@ class TetrisEnv(gym.Env):
         if lines_cleared == 1:
             reward += 2 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 2:
-            reward += 3 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
-        elif lines_cleared == 3:
             reward += 5 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+        elif lines_cleared == 3:
+            reward += 7 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 4:
-            reward += 10 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += 15 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
 
         if t_spin_type == 2 and lines_cleared == 2:
             reward += 6 # * np.sqrt(self.game.Combo + 1)
@@ -356,7 +352,7 @@ class TetrisEnv(gym.Env):
             reward -= 0
 
         if self.game.Combo != 0:
-            reward += self.game.Combo
+            reward += self.game.Combo * 0.2
 
         if self.game.B2B != 0:
             reward += 3 * self.game.B2B
@@ -371,7 +367,7 @@ class TetrisEnv(gym.Env):
             if self.game.state.turn_held:
                 reward = 0
             else:
-                reward += 2
+                reward += 3
                 
 
         terminated = self.game.state.game_over
@@ -392,6 +388,7 @@ class TetrisEnv(gym.Env):
             # print(f"delta middle_diff: {middle_diff - self.history["middle_diff"]}")
             # print(f"lines_cleared: = {lines_cleared}")
             print(f"REWARD = {reward}")
+            print(f"total holes made = {self.holes_made}")
             self.game.view.render(self.game.state, reward=reward)
 
             for event in pygame.event.get():

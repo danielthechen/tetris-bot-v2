@@ -59,7 +59,7 @@ class Tetris_Game:
             piece= Piece(self.get_random_shape_id()),
             gravity= Gravity(),
             next_shape_ids= [self.get_random_shape_id() for _ in range (5)],
-            hold_piece = '',
+            hold_piece = None,
             turn_held = False,
             lock_timer= 0,
             lock_resets= 0,
