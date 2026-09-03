@@ -15,16 +15,20 @@ class HoleLoggingCallback(BaseCallback):
         self.log_freq = log_freq
         self.episode_holes_made = []
         self.episode_lines_cleared = []
+        self.episode_holes_per_step = []
     def _on_step(self) -> bool:
         for info in self.locals["infos"]:
             if "episode" in info:
                 self.episode_holes_made.append(info["holes_made"])
                 self.episode_lines_cleared.append(info["ep_lines_cleared"])
+                self.episode_holes_per_step.append(info["holes_made"]/info["steps_made"])
         if len(self.episode_holes_made) >= self.log_freq:
             self.logger.record("custom/episode_holes_made_mean", np.mean(self.episode_holes_made))
             self.logger.record("custom/ep_lines_cleared", np.mean(self.episode_lines_cleared))
+            self.logger.record("custom/episode_holes_per_step", np.mean(self.episode_holes_per_step))
             self.episode_holes_made = []
-
+            self.episode_lines_cleared = []
+            self.episode_holes_per_step = []
         return True
 
 def make_env():
@@ -48,11 +52,12 @@ def mask_fn(env):
 if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
-    save_freq=15_625,
-    save_path="./models/v2/",
-    name_prefix="tetris_bot_expansion_v4"
+    save_freq=156_250,
+    save_path="./models/v2/v12/",
+    name_prefix="tetris_bot_expansion_v12",
+    save_vecnormalize= True
 )
-
+    
     env = SubprocVecEnv([make_env() for _ in range(32)])
 
     # env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs = 10)
@@ -75,20 +80,21 @@ if __name__ == "__main__":
     # model.save("ppo_tetris_expansion_v0.zip")
     # env.save("Tetris_Env_expansion_v0.pkl")
 
-    env = VecNormalize.load("Tetris_Env_expansion_v3.pkl", env)
-    model = MaskablePPO.load("ppo_tetris_expansion_v3.zip", env=env, device='mps', tensorboard_log="./runs/tetris_project/v2/")
-    # model = MaskablePPO.load("./models/tetris_bot_v27.1_4500000_steps.zip", env=env, device='mps', tensorboard_log = "./runs/tetris_project")
-    # model.learning_rate = FloatSchedule(5e-5)
-    # model.lr_schedule = FloatSchedule(5e-5)
+    env = VecNormalize.load("./history/oh_encoded/env/Tetris_Env_expansion_v11.pkl", env)
+    model = MaskablePPO.load("./history/oh_encoded/ppo/ppo_tetris_expansion_v11.zip", env=env, device='mps', tensorboard_log="./runs/tetris_project/v2/")
+    #model = MaskablePPO.load("./models/v2/v10/tetris_bot_expansion_v10_25000000_steps.zip", env=env, device='mps', tensorboard_log = "./runs/tetris_project/v2/")
+    model.learning_rate = FloatSchedule(5e-5)
+    model.lr_schedule = FloatSchedule(5e-5)
     # model.clip_range = FloatSchedule(0.15)
     # model.target_kl = 0.03
-    # model.ent_coef = 0.01
+    #model.ent_coef = 0.01
     # model.vf_coef = 1.0
     print(model.lr_schedule(1.0))
+    print(model.ent_coef)
     print("Learning!!!")
-    model.learn(total_timesteps=6_000_000, callback=[checkpoint_callback, HoleLoggingCallback()])
-    model.save("ppo_tetris_expansion_v4.zip")
-    env.save("Tetris_Env_expansion_v4.pkl")
+    model.learn(total_timesteps=40_000_000, callback=[checkpoint_callback, HoleLoggingCallback()])
+    model.save("./history/oh_encoded/ppo/ppo_tetris_expansion_v12.zip")
+    env.save("./history/oh_encoded/env/Tetris_Env_expansion_v12.pkl")
     env.close()
 
     # ./models/tetris_agent_1000000_steps
