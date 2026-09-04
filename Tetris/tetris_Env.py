@@ -303,7 +303,7 @@ class TetrisEnv(gym.Env):
         reward = 0
         reward += (TRUE_ROWS - well_height)/10 * 0.01
         #reward -= np.sum(heights) * 0.005
-        reward += np.power((1 - min(place_height,20)/20),2)
+        reward += np.power((1 - min(place_height,20)/20),2) * 2
         reward -= max_height/120 * 0.42    #/20 * 0.1
         reward -= row_holes/20 * 0.05
         reward -= bumpiness/20 * 0.02
@@ -323,13 +323,13 @@ class TetrisEnv(gym.Env):
         reward -= (middle_diff - self.history["middle_diff"]) * 0.02
 
         #reward (prev 5):
-        reward -= max(-2, min(0, (blocked_holes - self.history["blocked_holes"])) * 2)
+        reward -= max(-3, min(0, (blocked_holes - self.history["blocked_holes"])) * 3)
         reward -= max(-1.2, min(0, (row_holes - self.history["row_holes"]) * 0.3))
         reward -= max(-0.06, min(0,(blockades - self.history["blockades"]) * 0.01))
         reward -= max(-1, min(0, (max_height - self.history["max_height"]) * 0.05))
 
         reward = max(reward, -2.5)
-        reward -=  min(blocked_holes * 0.2, 1)
+        reward -=  min(blocked_holes * 0.3, 3)
 
         reward -= (bumpiness - self.history["bumpiness"]) * 0.05
         reward -= min(max(0,(blocked_holes - self.history["blocked_holes"]) * 5), 15)
@@ -340,13 +340,13 @@ class TetrisEnv(gym.Env):
 
         #(prev 100, 130)
         if lines_cleared == 1:
-            reward += -1 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += -3 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 2:
-            reward += 1 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += -1 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 3:
-            reward += 5 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += 3 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 4:
-            reward += 10 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += 20 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
 
         if t_spin_type == 2 and lines_cleared == 2:
             reward += 10 # * np.sqrt(self.game.Combo + 1)
@@ -374,7 +374,6 @@ class TetrisEnv(gym.Env):
                 reward = 0
             else:
                 reward += 2
-            
 
         terminated = self.game.state.game_over
         observation = self._get_obs()

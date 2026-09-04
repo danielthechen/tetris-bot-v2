@@ -10,7 +10,7 @@ import numpy as np
 
 def make_env():
     def _init():
-        env = TetrisEnv(render_mode= "human", key_playback=10)
+        env = TetrisEnv(render_mode= "human", key_playback=0)
         env = Monitor(env)
         env = ActionMasker(env, mask_fn)
         return env
@@ -31,16 +31,16 @@ def mask_fn(env):
 if __name__ == "__main__":
     eval_env = DummyVecEnv([make_env()])
 
-    version = 11
-    steps = 25000000
+    version = 12.1
+    steps = 5000000
 
     #In-Progress
-    #eval_env = VecNormalize.load(f"./models/v2/v{version}/tetris_bot_expansion_v{version}_vecnormalize_{steps}_steps.pkl", eval_env)
-    #model = MaskablePPO.load(f"./models/v2/v{version}/tetris_bot_expansion_v{version}_{steps}_steps.zip", env=eval_env)
+    eval_env = VecNormalize.load(f"./models/v2/v{version}/tetris_bot_expansion_v{version}_vecnormalize_{steps}_steps.pkl", eval_env)
+    model = MaskablePPO.load(f"./models/v2/v{version}/tetris_bot_expansion_v{version}_{steps}_steps.zip", env=eval_env)
 
     #Start anew
-    eval_env = VecNormalize.load(f"./history/oh_encoded/env/Tetris_Env_expansion_v{version}.pkl", eval_env)
-    model = MaskablePPO.load(f"./history/oh_encoded/ppo/ppo_tetris_expansion_v{version}.zip", env=eval_env)
+    # eval_env = VecNormalize.load(f"./history/oh_encoded/env/Tetris_Env_expansion_v{version}.pkl", eval_env)
+    # model = MaskablePPO.load(f"./history/oh_encoded/ppo/ppo_tetris_expansion_v{version}.zip", env=eval_env)
 
     obs = eval_env.reset()
     for _ in range(2000):
