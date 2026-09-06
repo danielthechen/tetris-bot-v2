@@ -31,8 +31,8 @@ def mask_fn(env):
 if __name__ == "__main__":
     eval_env = DummyVecEnv([make_env()])
 
-    version = 12.1
-    steps = 5000000
+    version = 15
+    steps = 40000000
 
     #In-Progress
     eval_env = VecNormalize.load(f"./models/v2/v{version}/tetris_bot_expansion_v{version}_vecnormalize_{steps}_steps.pkl", eval_env)
