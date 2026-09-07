@@ -53,8 +53,8 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
     save_freq=156_250,
-    save_path="./models/v2/v15.1/",
-    name_prefix="tetris_bot_expansion_v15.1",
+    save_path="./models/v2/v17/",
+    name_prefix="tetris_bot_expansion_v17",
     save_vecnormalize= True
 )
     
@@ -80,10 +80,10 @@ if __name__ == "__main__":
     # model.save("ppo_tetris_expansion_v0.zip")
     # env.save("Tetris_Env_expansion_v0.pkl")
 
-    # env = VecNormalize.load("./history/oh_encoded/env/Tetris_Env_expansion_v14.pkl", env)
-    # model = MaskablePPO.load("./history/oh_encoded/ppo/ppo_tetris_expansion_v14.zip", env=env, device='mps', tensorboard_log="./runs/tetris_project/v2/")
-    env = VecNormalize.load("./models/v2/v15/tetris_bot_expansion_v15_vecnormalize_40000000_steps.pkl", env)
-    model = MaskablePPO.load("./models/v2/v15/tetris_bot_expansion_v15_40000000_steps.zip", env=env, device='mps', tensorboard_log = "./runs/tetris_project/v2/")
+    env = VecNormalize.load("./history/oh_encoded/env/Tetris_Env_expansion_v16.pkl", env)
+    model = MaskablePPO.load("./history/oh_encoded/ppo/ppo_tetris_expansion_v16.zip", env=env, device='mps', tensorboard_log="./runs/tetris_project/v2/")
+    # env = VecNormalize.load("./models/v2/v17/tetris_bot_expansion_v15_vecnormalize_40000000_steps.pkl", env)
+    # model = MaskablePPO.load("./models/v2/v17/tetris_bot_expansion_v15_40000000_steps.zip", env=env, device='mps', tensorboard_log = "./runs/tetris_project/v2/")
     #model.learning_rate = FloatSchedule(1e-4)
     #model.lr_schedule = FloatSchedule(1e-4)
     # model.clip_range = FloatSchedule(0.15)
@@ -94,8 +94,8 @@ if __name__ == "__main__":
     print(model.ent_coef)
     print("Learning!!!")
     model.learn(total_timesteps=45_000_000, callback=[checkpoint_callback, HoleLoggingCallback()])
-    model.save("./history/oh_encoded/ppo/ppo_tetris_expansion_v16.zip")
-    env.save("./history/oh_encoded/env/Tetris_Env_expansion_v16.pkl")
+    model.save("./history/oh_encoded/ppo/ppo_tetris_expansion_v17.zip")
+    env.save("./history/oh_encoded/env/Tetris_Env_expansion_v17.pkl")
     env.close()
 
     # ./models/tetris_agent_1000000_steps
