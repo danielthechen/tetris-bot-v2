@@ -323,13 +323,13 @@ class TetrisEnv(gym.Env):
         reward -= (middle_diff - self.history["middle_diff"]) * 0.02
 
         #reward (prev 5):
-        reward -= max(-4, min(0, (blocked_holes - self.history["blocked_holes"])) * 4)
+        reward -= max(-1, min(0, (blocked_holes - self.history["blocked_holes"])) * 1)
         reward -= max(-1.2, min(0, (row_holes - self.history["row_holes"]) * 0.3))
         reward -= max(-0.06, min(0,(blockades - self.history["blockades"]) * 0.01))
         #reward -= max(-0.2, min(0, (max_height - self.history["max_height"]) * 0.02))
 
         reward = max(reward, -2.5)
-        reward -=  min(blocked_holes * 1.5, 1.5)
+        reward -=  min(blocked_holes * 2, 2)
 
         reward -= (bumpiness - self.history["bumpiness"]) * 0.05
         reward -= min(max(0,(blocked_holes - self.history["blocked_holes"]) * 4), 12)
@@ -346,7 +346,7 @@ class TetrisEnv(gym.Env):
         elif lines_cleared == 3:
             reward += 0 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 4:
-            reward += 30 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += 40 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
 
         if t_spin_type == 2 and lines_cleared == 2:
             reward += 20 # * np.sqrt(self.game.Combo + 1)

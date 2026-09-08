@@ -31,7 +31,7 @@ def mask_fn(env):
 if __name__ == "__main__":
     eval_env = DummyVecEnv([make_env()])
 
-    version = 17
+    version = 18
     steps = 40000000
 
     #In-Progress
