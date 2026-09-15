@@ -204,16 +204,17 @@ class TetrisEnv(gym.Env):
         cheese_height = self.np_random.integers(5,15)
         hole_prob = self.np_random.uniform(0.1,0.2)
 
-        if self.np_random.random() < -1:
+        if self.np_random.random() < 0.4:
 
             self.episode_cheese = True
+            guarantee_gap = self.np_random.integers(0,BOARD_COLUMNS)
             for row in range (cheese_height):
                 for col in range(BOARD_COLUMNS):
-                    if self.np_random.random() > hole_prob:
-                        self.game.state.grid.matrix[TRUE_ROWS - 1 - row][col] = 1
-                guarantee_gap = self.np_random.integers(0,BOARD_COLUMNS)
-                if self.game.state.grid.matrix[TRUE_ROWS - 1 - row][guarantee_gap] != 0:
-                    self.game.state.grid.matrix[TRUE_ROWS - 1 - row][guarantee_gap] = 0
+                    # if self.np_random.random() > hole_prob:
+                    self.game.state.grid.matrix[TRUE_ROWS - 1 - row][col] = 1
+                
+                #if self.game.state.grid.matrix[TRUE_ROWS - 1 - row][guarantee_gap] != 0:
+                self.game.state.grid.matrix[TRUE_ROWS - 1 - row][guarantee_gap] = 0
 
         self.cached_placements = bfs_positions(self.game.state)
 
@@ -303,7 +304,7 @@ class TetrisEnv(gym.Env):
         reward = 0
         reward += (TRUE_ROWS - well_height)/10 * 0.01
         #reward -= np.sum(heights) * 0.005
-        reward += np.power((1 - min(place_height,20)/20),2)
+        reward += np.power((1 - min(place_height,20)/20),2) * 2
         #reward -= max_height/120 * 0.45    #/20 * 0.1
         reward -= row_holes/20 * 0.05
         reward -= bumpiness/20 * 0.02
@@ -323,7 +324,7 @@ class TetrisEnv(gym.Env):
         reward -= (middle_diff - self.history["middle_diff"]) * 0.02
 
         #reward (prev 5):
-        reward -= max(-1, min(0, (blocked_holes - self.history["blocked_holes"])) * 1)
+        reward -= max(-9, min(0, (blocked_holes - self.history["blocked_holes"])) * 9)
         reward -= max(-1.2, min(0, (row_holes - self.history["row_holes"]) * 0.3))
         reward -= max(-0.06, min(0,(blockades - self.history["blockades"]) * 0.01))
         #reward -= max(-0.2, min(0, (max_height - self.history["max_height"]) * 0.02))
@@ -332,21 +333,21 @@ class TetrisEnv(gym.Env):
         reward -=  min(blocked_holes * 2, 2)
 
         reward -= (bumpiness - self.history["bumpiness"]) * 0.05
-        reward -= min(max(0,(blocked_holes - self.history["blocked_holes"]) * 4), 12)
-        reward -= min(max(0,(row_holes - self.history["row_holes"])), 3)
+        reward -= min(max(0,(blocked_holes - self.history["blocked_holes"]) * 4), 16)
+        reward -= min(max(0,(row_holes - self.history["row_holes"])) * 2, 6)
         reward -= min(max(0,(max_height - self.history["max_height"])) * 0.1, 1)
 
         piece = self.game.state.piece.name
 
         #(prev 100, 130)
         if lines_cleared == 1:
-            reward += 0 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += -4 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 2:
-            reward += 0 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += -4 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 3:
-            reward += 0 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += -4 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
         elif lines_cleared == 4:
-            reward += 40 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
+            reward += 70 # * (0.8 + 0.2 * (20 - place_height) / 20) * np.sqrt(self.game.Combo + 1)
 
         if t_spin_type == 2 and lines_cleared == 2:
             reward += 20 # * np.sqrt(self.game.Combo + 1)
@@ -364,7 +365,7 @@ class TetrisEnv(gym.Env):
             reward += 3 * self.game.B2B
         
         if pc:
-            reward += 100
+            reward += 10
 
         #prev 15,12,9,5
         if self.game.state.game_over:
