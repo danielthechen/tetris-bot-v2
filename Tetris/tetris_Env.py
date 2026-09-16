@@ -304,7 +304,7 @@ class TetrisEnv(gym.Env):
         reward = 0
         reward += (TRUE_ROWS - well_height)/10 * 0.01
         #reward -= np.sum(heights) * 0.005
-        reward += np.power((1 - min(place_height,20)/20),2) * 2
+        reward += np.power((1 - min(place_height,20)/20),2) * 1.5
         #reward -= max_height/120 * 0.45    #/20 * 0.1
         reward -= row_holes/20 * 0.05
         reward -= bumpiness/20 * 0.02
@@ -324,7 +324,7 @@ class TetrisEnv(gym.Env):
         reward -= (middle_diff - self.history["middle_diff"]) * 0.02
 
         #reward (prev 5):
-        reward -= max(-9, min(0, (blocked_holes - self.history["blocked_holes"])) * 9)
+        reward -= max(-7, min(0, (blocked_holes - self.history["blocked_holes"])) * 7)
         reward -= max(-1.2, min(0, (row_holes - self.history["row_holes"]) * 0.3))
         reward -= max(-0.06, min(0,(blockades - self.history["blockades"]) * 0.01))
         #reward -= max(-0.2, min(0, (max_height - self.history["max_height"]) * 0.02))
@@ -374,7 +374,7 @@ class TetrisEnv(gym.Env):
             if self.game.state.turn_held:
                 reward = 0
             else:
-                reward += 1
+                reward += 1.5
 
         terminated = self.game.state.game_over
         observation = self._get_obs()
