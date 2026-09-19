@@ -11,4 +11,4 @@ Tetris Game Features:
 - Instant soft drop
 - Standard SRS Kick-table
 
-Currently, I'm playing around with reward functions to replicate behaviours found at competitive play!
+Model is currently being trained using Gymnasium & Stable Baselines 3. Currently, I'm playing around with reward functions to replicate behaviours found at competitive play!
