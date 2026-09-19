@@ -5,7 +5,7 @@ from gymnasium import spaces
 import pygame
 import numpy as np
 from config import BOARD_COLUMNS, BOARD_ROWS, TRUE_ROWS
-from bfs_search import bfs_positions
+from dfs_search import dfs_positions
 from game import Tetris_Game
 from grid import EMPTY_BLOCK
 from rotation_masks import ROTATIONS
@@ -170,7 +170,7 @@ class TetrisEnv(gym.Env):
         queue_oh = np.concatenate([self.one_hot_piece(name) for name in self.game.state.next_shape_ids])
         hold_oh = self.one_hot_piece(self.game.state.hold_piece)
 
-        placements = np.array(bfs_positions(self.game.state))
+        placements = np.array(dfs_positions(self.game.state))
         placements_vec = np.zeros((49*3))
         for i, (px,py,prot) in enumerate(placements[:49]):
             placements_vec[i*3:(i*3)+3] = [px,py,prot]
@@ -216,7 +216,7 @@ class TetrisEnv(gym.Env):
                 #if self.game.state.grid.matrix[TRUE_ROWS - 1 - row][guarantee_gap] != 0:
                 self.game.state.grid.matrix[TRUE_ROWS - 1 - row][guarantee_gap] = 0
 
-        self.cached_placements = bfs_positions(self.game.state)
+        self.cached_placements = dfs_positions(self.game.state)
 
         board = np.flipud((np.array(self.game.state.grid.matrix) != EMPTY_BLOCK).astype(np.int8))
         blocked_holes = self.get_blocked_holes(board)
@@ -379,7 +379,7 @@ class TetrisEnv(gym.Env):
         terminated = self.game.state.game_over
         observation = self._get_obs()
         info = self._get_info()
-        self.cached_placements = bfs_positions(self.game.state)
+        self.cached_placements = dfs_positions(self.game.state)
 
         if self.render_mode == "human":
             # print(self.game.Combo)

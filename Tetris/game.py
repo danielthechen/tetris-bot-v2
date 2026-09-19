@@ -8,8 +8,8 @@ from piece import Piece
 from grid import Grid, EMPTY_BLOCK
 from gravity import Gravity
 #from kicks import I_OFFSET_DATA, JLTSZ_OFFSET_DATA, KICKS_180, O_OFFSET_DATA
-from bfs_search import bfs_positions
-from bfs_kicks import KICK_DIFFS
+from dfs_search import dfs_positions
+from dfs_kicks import KICK_DIFFS
 
 class Tetris_Game:
     def __init__(self):

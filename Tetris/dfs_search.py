@@ -1,8 +1,8 @@
 from collections import deque
 from rotation_masks import ROTATIONS, ROTATION_OFFSETS
-from bfs_kicks import KICK_DIFFS
+from dfs_kicks import KICK_DIFFS
 
-def bfs_positions(state):
+def dfs_positions(state):
     queue = deque([(state.piece.x, state.piece.y, state.rotation_idx)])
     visited = set()
     legal_positions = []

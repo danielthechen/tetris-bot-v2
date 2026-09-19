@@ -3,7 +3,7 @@ from ast import mod
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 from stable_baselines3.common.monitor import Monitor
 from tetris_Env import TetrisEnv
-from bfs_search import bfs_positions
+from dfs_search import bfs_positions
 from sb3_contrib.common.wrappers import ActionMasker
 from sb3_contrib import MaskablePPO
 import numpy as np
