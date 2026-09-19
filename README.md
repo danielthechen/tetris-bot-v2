@@ -8,7 +8,7 @@ Tetris Game Features:
 - 5 piece Queue
 - Hold piece
 - Lock Delay, DAS, ARR, Gravity (all adjustable within config.py)
-- Instant soft drop (toggleable)
+- Instant soft drop
 - Standard SRS Kick-table
 
 Currently, I'm playing around with reward functions to replicate behaviours found at competitive play!
